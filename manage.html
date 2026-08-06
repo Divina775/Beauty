@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en" id="htmlRoot">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Staff — Availability — DM Style Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=Work+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header>
+  <nav class="nav">
+    <a href="#" data-nav="index.html" class="logo"><img src="images/logo-mark.jpg" alt="DM Style Studio" class="logo-img"></a>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">☰</button>
+    <div class="nav-links" id="navLinks">
+      <a href="#" data-nav="index.html" data-i18n="navHome">Home</a>
+      <a href="#" data-nav="services.html" data-i18n="navServices">Services</a>
+      <a href="#" data-nav="contact.html" data-i18n="navContact">Contact</a>
+    </div>
+    <div class="nav-right">
+      <div class="lang-toggle">
+        <button id="langEn" class="active">EN</button>
+        <button id="langFr">FR</button>
+      </div>
+    </div>
+  </nav>
+</header>
+
+<main>
+  <div class="page-header">
+    <div class="eyebrow">Staff</div>
+    <h1 data-i18n="manageTitle">Studio Availability</h1>
+    <p data-i18n="manageSub"></p>
+  </div>
+
+  <section class="pin-gate" id="pinGate">
+    <div class="pin-box">
+      <h3 data-i18n="pinTitle">Staff Access</h3>
+      <p data-i18n="pinSub"></p>
+      <input type="password" id="pinInput" inputmode="numeric" autocomplete="off">
+      <button class="ticket-submit" id="pinSubmit" style="margin-top:0;" data-i18n="pinButton">Unlock</button>
+      <p class="pin-error" id="pinError" style="display:none;" data-i18n="pinError"></p>
+    </div>
+  </section>
+
+  <div id="staffPanel" style="display:none;">
+    <section style="padding-top:40px;">
+      <div class="wrap" style="max-width:820px;">
+
+        <div class="notice-banner" id="firebaseNotice" style="display:none;">
+          <strong>Note:</strong> <span data-i18n="firebaseNotConfigured"></span>
+        </div>
+
+        <div class="manage-panel">
+          <h3 data-i18n="staffCalendarTitle">Day Availability</h3>
+          <p class="sub" data-i18n="staffCalendarSub"></p>
+          <label for="staffDate" style="display:block; font-size:.72rem; letter-spacing:.08em; text-transform:uppercase; color:var(--text-muted); margin-bottom:8px;" data-i18n="pickStaffDate">Select a date</label>
+          <input type="date" id="staffDate" style="max-width:220px;">
+          <div class="day-slot-grid" id="daySlotGrid"></div>
+          <div id="dayBookingsWrap" style="display:none;">
+            <div class="eyebrow" style="margin-top:26px; margin-bottom:10px;" data-i18n="dayBookingsTitle">Bookings for this day</div>
+            <div id="dayBookingsList"></div>
+          </div>
+        </div>
+
+        <div class="manage-panel">
+          <h3 data-i18n="manualBookingTitle">Add a Manual Booking</h3>
+          <p class="sub" data-i18n="manualBookingSub"></p>
+          <div class="manual-form">
+            <div class="field">
+              <label for="manName" data-i18n="manFullName">Client name</label>
+              <input type="text" id="manName">
+            </div>
+            <div class="field">
+              <label for="manPhone" data-i18n="manPhoneLabel">Phone</label>
+              <input type="tel" id="manPhone">
+            </div>
+            <div class="field full">
+              <label for="manService" data-i18n="manServiceLabel">Service</label>
+              <select id="manService"></select>
+            </div>
+            <div class="field">
+              <label for="manDate" data-i18n="manDateLabel">Date</label>
+              <input type="date" id="manDate">
+            </div>
+            <div class="field">
+              <label for="manTime" data-i18n="manTimeLabel">Time</label>
+              <select id="manTime"></select>
+            </div>
+            <div class="field full">
+              <button class="ticket-submit" id="manSubmit" style="margin-top:0;" data-i18n="manSubmit">Add Booking</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="manage-panel">
+          <h3 data-i18n="referenceCalendarTitle">Studio Google Calendar (reference)</h3>
+          <p class="sub" data-i18n="referenceCalendarSub"></p>
+          <div style="border:1px solid var(--line); overflow:hidden; margin-top:6px;">
+            <iframe src="https://calendar.google.com/calendar/embed?src=deb4510c5def39f5d867b199070494b0c1e4201ef7e6b11d729c75d489f670d9%40group.calendar.google.com&amp;ctz=America%2FToronto"
+              style="border:0; display:block;" width="100%" height="600" frameborder="0" scrolling="no" loading="lazy"></iframe>
+          </div>
+          <a href="https://calendar.google.com/calendar/u/2?cid=ZGViNDUxMGM1ZGVmMzlmNWQ4NjdiMTk5MDcwNDk0YjBjMWU0MjAxZWY3ZTZiMTFkNzI5Yzc1ZDQ4OWY2NzBkOUBncm91cC5jYWxlbmRhci5nb29nbGUuY29t"
+            target="_blank" rel="noopener" class="btn-ghost" style="display:inline-block; margin-top:16px; padding:12px 22px;" data-i18n="openInGoogle">Open in Google Calendar</a>
+        </div>
+
+      </div>
+    </section>
+  </div>
+</main>
+
+<footer>
+  <div class="wrap footer-inner">
+    <div class="footer-brand">
+      <a href="#" data-nav="index.html" class="logo"><img src="images/logo-mark.jpg" alt="DM Style Studio" class="logo-img logo-img-footer"></a>
+      <div class="footer-social">
+        <a class="social-icon social-call" id="footerCall" href="#" aria-label="Call">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.02-.24 11.3 11.3 0 0 0 3.54.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1C10.4 21 3 13.6 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.24.2 2.45.57 3.54a1 1 0 0 1-.25 1.02l-2.2 2.2z"/></svg>
+        </a>
+        <a class="social-icon social-whatsapp" id="footerWhatsapp" href="#" target="_blank" rel="noopener" aria-label="WhatsApp">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.29-1.39a9.9 9.9 0 0 0 4.75 1.21h.01c5.46 0 9.9-4.45 9.9-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2m0 1.67c2.2 0 4.27.86 5.82 2.42a8.19 8.19 0 0 1 2.41 5.82c0 4.55-3.7 8.24-8.24 8.24a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.14.82.84-3.06-.2-.32a8.18 8.18 0 0 1-1.26-4.37c0-4.55 3.7-8.22 8.26-8.22M8.53 6.98c-.17 0-.45.06-.68.32-.23.25-.9.87-.9 2.13 0 1.25.92 2.46 1.05 2.63.13.17 1.8 2.88 4.43 3.93 2.19.87 2.64.7 3.11.65.48-.04 1.55-.63 1.77-1.24.22-.61.22-1.13.15-1.24-.06-.11-.24-.17-.5-.3-.26-.13-1.55-.77-1.79-.86-.24-.09-.42-.13-.59.13-.17.26-.68.86-.83 1.03-.15.17-.31.19-.57.06-.26-.13-1.09-.4-2.08-1.28-.77-.68-1.29-1.53-1.44-1.79-.15-.26-.02-.4.11-.53.12-.12.26-.31.39-.47.13-.15.17-.26.26-.43.09-.17.04-.32-.02-.45-.06-.13-.59-1.46-.82-1.99-.21-.5-.43-.44-.59-.45z"/></svg>
+        </a>
+        <a class="social-icon social-instagram" id="footerInstagram" href="#" target="_blank" rel="noopener" aria-label="Instagram">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+        </a>
+        <a class="social-icon social-tiktok" id="footerTiktok" href="#" target="_blank" rel="noopener" aria-label="TikTok">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.6 5.82s.51.5 0 0A4.278 4.278 0 0 1 15.54 3h-3.09v12.4a2.592 2.592 0 0 1-2.59 2.5c-1.42 0-2.6-1.16-2.6-2.6 0-1.72 1.66-3.01 3.37-2.48V9.66c-3.45-.46-6.47 2.22-6.47 5.64 0 3.33 2.76 5.7 5.69 5.7 3.14 0 5.69-2.55 5.69-5.7V9.01a7.35 7.35 0 0 0 4.3 1.38V7.3s-1.88.09-3.24-1.48z"/></svg>
+        </a>
+        <a class="social-icon social-facebook" id="footerFacebook" href="#" target="_blank" rel="noopener" aria-label="Facebook">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 9H15V6.5h-1.5C11.57 6.5 10 8.07 10 10v1.5H8V14h2v7h2.5v-7H15l.5-2.5H12.5V10c0-.55.45-1 1-1z"/></svg>
+        </a>
+      </div>
+    </div>
+    <div class="footer-links">
+      <a href="#" data-nav="index.html" data-i18n="navHome">Home</a>
+      <a href="#" data-nav="services.html" data-i18n="navServices">Services</a>
+    </div>
+    <p class="fine">&copy; 2026 DM Style Studio. <span data-i18n="footerRights"></span></p>
+  </div>
+</footer>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="data.js"></script>
+<script>
+const lang = initChrome();
+const t = I18N[lang];
+
+document.getElementById('pinInput').placeholder = t.pinPlaceholder;
+document.getElementById('firebaseNotice').style.display = db ? 'none' : 'block';
+
+/* Declared up front so the auto-unlock check below (which can call straight into
+   initStaffPanel/renderDaySlots on page load) never references them before they exist. */
+let staffPanelReady = false;
+let staffSelectedDate = '';
+let daySlotsRequestId = 0;
+
+/* ---------------- PIN GATE ---------------- */
+const pinGate = document.getElementById('pinGate');
+const staffPanel = document.getElementById('staffPanel');
+
+function unlockStaff(){
+  pinGate.style.display = 'none';
+  staffPanel.style.display = 'block';
+  initStaffPanel();
+}
+function tryPin(){
+  const val = document.getElementById('pinInput').value.trim();
+  if(val === STAFF_PIN){
+    sessionStorage.setItem('dmstyle_staff_ok', '1');
+    unlockStaff();
+  } else {
+    document.getElementById('pinError').style.display = 'block';
+  }
+}
+document.getElementById('pinSubmit').addEventListener('click', tryPin);
+document.getElementById('pinInput').addEventListener('keydown', (e)=>{ if(e.key==='Enter') tryPin(); });
+
+if(sessionStorage.getItem('dmstyle_staff_ok') === '1'){
+  unlockStaff();
+}
+
+/* ---------------- STAFF PANEL ---------------- */
+function buildManServiceOptions(){
+  const groups = categories(lang).map(cat=>{
+    const items = SERVICES.filter(s=>s.cat[lang]===cat);
+    const opts = items.flatMap(s=>{
+      if(s.options.length===1 && !s.options[0].label){
+        return [`<option value="${s.id}|0">${s.name[lang]} — $${s.options[0].price}</option>`];
+      }
+      return s.options.map((opt,i)=>`<option value="${s.id}|${i}">${s.name[lang]} — ${opt.label[lang]} — $${opt.price}</option>`);
+    });
+    return `<optgroup label="${cat}">${opts.join('')}</optgroup>`;
+  }).join('');
+  return `<option value="" disabled selected>${t.manServicePlaceholder}</option>` + groups;
+}
+
+async function getTakenTimesForDate(date){
+  const [bookings, blocked] = await Promise.all([Bookings.all(), Blocked.all()]);
+  const taken = new Set();
+  bookings.filter(b=>b.date===date).forEach(b=> taken.add(b.time));
+  blocked.filter(b=>b.date===date).forEach(b=> taken.add(b.time));
+  return taken;
+}
+
+let manTimeRequestId = 0;
+async function refreshManTimeOptions(){
+  const manTimeSel = document.getElementById('manTime');
+  const date = document.getElementById('manDate').value;
+  const prevValue = manTimeSel.value;
+
+  if(!date){
+    manTimeSel.innerHTML = `<option value="" disabled selected>${t.pickStaffDate}</option>`;
+    return;
+  }
+
+  const daySlots = getTimeSlotsForDate(date);
+  if(daySlots.length === 0){
+    manTimeSel.innerHTML = `<option value="" disabled selected>${t.closedThisDay}</option>`;
+    return;
+  }
+
+  const requestId = ++manTimeRequestId;
+  const taken = await getTakenTimesForDate(date);
+  if(requestId !== manTimeRequestId) return; // a newer date was picked while this was loading
+
+  manTimeSel.innerHTML = daySlots.map(tm=>{
+    const past = isPastSlot(date, tm);
+    const bookedOrBlocked = taken.has(tm);
+    const disabled = past || bookedOrBlocked;
+    const suffix = past ? ` ${t.manTimePastSuffix}` : (bookedOrBlocked ? ` ${t.manTimeTakenSuffix}` : '');
+    return `<option value="${tm}" ${disabled?'disabled':''}>${formatSlotTime(tm, lang)}${suffix}</option>`;
+  }).join('');
+  if(prevValue && !taken.has(prevValue) && !isPastSlot(date, prevValue)) manTimeSel.value = prevValue;
+}
+
+function initStaffPanel(){
+  if(staffPanelReady) return;
+  staffPanelReady = true;
+
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('staffDate').min = today;
+  document.getElementById('manDate').min = today;
+  refreshManTimeOptions();
+  document.getElementById('manService').innerHTML = buildManServiceOptions();
+
+  document.getElementById('staffDate').addEventListener('change', (e)=>{
+    staffSelectedDate = e.target.value;
+    renderDaySlots();
+  });
+
+  document.getElementById('manDate').addEventListener('change', refreshManTimeOptions);
+
+  document.getElementById('manSubmit').addEventListener('click', async ()=>{
+    const manSubmitBtn = document.getElementById('manSubmit');
+    const name = document.getElementById('manName').value.trim();
+    const phone = document.getElementById('manPhone').value.trim();
+    const serviceVal = document.getElementById('manService').value;
+    const date = document.getElementById('manDate').value;
+    const time = document.getElementById('manTime').value;
+    if(!name || !serviceVal || !date || !time){ alert(t.manFillRequired); return; }
+
+    manSubmitBtn.disabled = true;
+
+    if(isPastSlot(date, time)){
+      alert(t.pastTimeError);
+      manSubmitBtn.disabled = false;
+      await refreshManTimeOptions();
+      return;
+    }
+    // re-check right before writing, in case the slot was taken since the dropdown last loaded
+    const taken = await getTakenTimesForDate(date);
+    if(taken.has(time)){
+      alert(t.slotConflict);
+      manSubmitBtn.disabled = false;
+      await refreshManTimeOptions();
+      return;
+    }
+
+    const [svcId, optIdx] = serviceVal.split('|');
+    const svc = SERVICES.find(s=>s.id===svcId);
+    const opt = svc.options[parseInt(optIdx,10)];
+    const serviceLabel = opt.label ? `${svc.name[lang]} — ${opt.label[lang]}` : svc.name[lang];
+
+    const dateStr = new Date(date+'T00:00').toLocaleDateString(lang==='fr' ? 'fr-CA' : 'en-US', {weekday:'long',month:'long',day:'numeric'});
+    await Bookings.add({ name, phone, email:'', date, dateStr, time, services:[serviceLabel], source:'staff' });
+    manSubmitBtn.disabled = false;
+
+    document.getElementById('manName').value = '';
+    document.getElementById('manPhone').value = '';
+    document.getElementById('manService').value = '';
+    document.getElementById('manDate').value = '';
+    refreshManTimeOptions();
+    alert(t.manSuccess);
+    if(date === staffSelectedDate) renderDaySlots();
+  });
+}
+
+async function renderDaySlots(){
+  const grid = document.getElementById('daySlotGrid');
+  if(!staffSelectedDate){ grid.innerHTML = ''; return; }
+
+  const requestId = ++daySlotsRequestId;
+  grid.innerHTML = `<p class="ticket-note" style="text-align:left; margin:16px 0 0;">${t.loadingSlots}</p>`;
+
+  const [bookings, blocked] = await Promise.all([Bookings.all(), Blocked.all()]);
+  if(requestId !== daySlotsRequestId) return; // a newer date was picked while this was loading
+
+  const dayBookings = bookings.filter(b=>b.date===staffSelectedDate);
+  const dayBlocked = blocked.filter(b=>b.date===staffSelectedDate);
+  const daySlots = getTimeSlotsForDate(staffSelectedDate);
+
+  if(daySlots.length === 0){
+    grid.innerHTML = `<p class="ticket-note" style="text-align:left; margin:16px 0 0;">${t.closedThisDay}</p>`;
+  } else {
+    grid.innerHTML = daySlots.map(tm=>{
+      const booking = dayBookings.find(b=>b.time===tm);
+      const block = dayBlocked.find(b=>b.time===tm);
+      let cls = 'open', sub = t.slotAvailable, title = '';
+      if(booking){
+        cls = 'booked'; sub = booking.name || t.slotBooked;
+        title = (booking.services||[]).join(', ');
+      }
+      else if(block){ cls = 'blocked'; sub = t.slotBlocked; }
+      return `<div class="day-slot ${cls}" data-time="${tm}" data-booking-id="${booking ? booking.id : ''}" data-block-id="${block ? block.id : ''}" title="${title}">
+        <span class="t">${formatSlotTime(tm, lang)}</span><span class="s">${sub}</span>
+      </div>`;
+    }).join('');
+
+    grid.querySelectorAll('.day-slot').forEach(el=>{
+      el.addEventListener('click', ()=> onDaySlotClick(el));
+    });
+  }
+
+  const listWrap = document.getElementById('dayBookingsWrap');
+  const listEl = document.getElementById('dayBookingsList');
+  const sortedBookings = dayBookings.slice().sort((a,b)=> a.time.localeCompare(b.time));
+  if(sortedBookings.length === 0){
+    listWrap.style.display = 'none';
+    listEl.innerHTML = '';
+  } else {
+    listWrap.style.display = 'block';
+    listEl.innerHTML = sortedBookings.map(b => `
+      <div class="booking">
+        <div class="bk-date">${formatSlotTime(b.time, lang)} — ${b.name}</div>
+        <div class="bk-services">${(b.services||[]).join(', ')}${b.phone ? ' · ' + b.phone : ''}</div>
+      </div>
+    `).join('');
+  }
+}
+
+async function onDaySlotClick(el){
+  if(el.classList.contains('open')){
+    await Blocked.add({ date: staffSelectedDate, time: el.dataset.time });
+    renderDaySlots();
+  } else if(el.classList.contains('blocked')){
+    if(el.dataset.blockId) await Blocked.remove(el.dataset.blockId);
+    renderDaySlots();
+  } else if(el.classList.contains('booked')){
+    if(el.dataset.bookingId && confirm(t.confirmCancelBooking)){
+      await Bookings.remove(el.dataset.bookingId);
+      renderDaySlots();
+    }
+  }
+}
+</script>
+
+</body>
+</html>

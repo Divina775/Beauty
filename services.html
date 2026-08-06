@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en" id="htmlRoot">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Services & Booking — DM Style Studio</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=Work+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header>
+  <nav class="nav">
+    <a href="#" data-nav="index.html" class="logo"><img src="images/logo-mark.jpg" alt="DM Style Studio" class="logo-img"></a>
+    <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">☰</button>
+    <div class="nav-links" id="navLinks">
+      <a href="#" data-nav="index.html" data-i18n="navHome">Home</a>
+      <a href="#" data-nav="services.html" class="current" data-i18n="navServices">Services</a>
+      <button class="link" id="checkApptNavBtn" data-i18n="navCheck">Check Appointment</button>
+      <a href="#" data-nav="contact.html" data-i18n="navContact">Contact</a>
+    </div>
+    <div class="nav-right">
+      <button class="cart-btn" id="cartBtn" aria-label="View appointment cart">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+        <span class="cart-badge" id="cartBadge" style="display:none;">0</span>
+      </button>
+      <div class="lang-toggle">
+        <button id="langEn" class="active">EN</button>
+        <button id="langFr">FR</button>
+      </div>
+      <a href="#book" class="nav-cta" data-i18n="navBook">Book Appointment</a>
+    </div>
+  </nav>
+</header>
+
+<div class="quick-actions" id="quickActions">
+  <a class="fab fab-whatsapp" id="fabWhatsapp" href="#" target="_blank" rel="noopener" aria-label="WhatsApp">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.29-1.39a9.9 9.9 0 0 0 4.75 1.21h.01c5.46 0 9.9-4.45 9.9-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2m0 1.67c2.2 0 4.27.86 5.82 2.42a8.19 8.19 0 0 1 2.41 5.82c0 4.55-3.7 8.24-8.24 8.24a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.14.82.84-3.06-.2-.32a8.18 8.18 0 0 1-1.26-4.37c0-4.55 3.7-8.22 8.26-8.22M8.53 6.98c-.17 0-.45.06-.68.32-.23.25-.9.87-.9 2.13 0 1.25.92 2.46 1.05 2.63.13.17 1.8 2.88 4.43 3.93 2.19.87 2.64.7 3.11.65.48-.04 1.55-.63 1.77-1.24.22-.61.22-1.13.15-1.24-.06-.11-.24-.17-.5-.3-.26-.13-1.55-.77-1.79-.86-.24-.09-.42-.13-.59.13-.17.26-.68.86-.83 1.03-.15.17-.31.19-.57.06-.26-.13-1.09-.4-2.08-1.28-.77-.68-1.29-1.53-1.44-1.79-.15-.26-.02-.4.11-.53.12-.12.26-.31.39-.47.13-.15.17-.26.26-.43.09-.17.04-.32-.02-.45-.06-.13-.59-1.46-.82-1.99-.21-.5-.43-.44-.59-.45z"/></svg>
+  </a>
+  <a class="fab fab-call" id="fabCall" href="#" aria-label="Call">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.02-.24 11.3 11.3 0 0 0 3.54.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1C10.4 21 3 13.6 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.24.2 2.45.57 3.54a1 1 0 0 1-.25 1.02l-2.2 2.2z"/></svg>
+  </a>
+  <a class="fab fab-instagram" id="fabInstagram" href="#" target="_blank" rel="noopener" aria-label="Instagram">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+  </a>
+  <a class="fab fab-tiktok" id="fabTiktok" href="#" target="_blank" rel="noopener" aria-label="TikTok">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.6 5.82s.51.5 0 0A4.278 4.278 0 0 1 15.54 3h-3.09v12.4a2.592 2.592 0 0 1-2.59 2.5c-1.42 0-2.6-1.16-2.6-2.6 0-1.72 1.66-3.01 3.37-2.48V9.66c-3.45-.46-6.47 2.22-6.47 5.64 0 3.33 2.76 5.7 5.69 5.7 3.14 0 5.69-2.55 5.69-5.7V9.01a7.35 7.35 0 0 0 4.3 1.38V7.3s-1.88.09-3.24-1.48z"/></svg>
+  </a>
+  <a class="fab fab-facebook" id="fabFacebook" href="#" target="_blank" rel="noopener" aria-label="Facebook">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 9H15V6.5h-1.5C11.57 6.5 10 8.07 10 10v1.5H8V14h2v7h2.5v-7H15l.5-2.5H12.5V10c0-.55.45-1 1-1z"/></svg>
+  </a>
+  <button class="fab fab-toggle" id="fabToggle" aria-label="Show contact options" aria-expanded="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+  </button>
+</div>
+
+<main>
+  <div class="page-header">
+    <div class="eyebrow" data-i18n="bookEyebrow">Reserve Your Visit</div>
+    <h1 data-i18n="bookTitle">Build your appointment</h1>
+    <p data-i18n="bookLede"></p>
+  </div>
+
+  <section id="book">
+    <div class="wrap">
+      <div class="booking-layout">
+        <div class="services-col">
+          <div class="cat-tabs" id="catTabs"></div>
+          <div id="serviceGroups"></div>
+        </div>
+
+        <aside class="ticket" id="ticket">
+          <button class="drawer-close" id="drawerClose" aria-label="Close">✕</button>
+          <div class="ticket-head">
+            <h3 data-i18n="ticketTitle">Your Appointment</h3>
+            <span id="itemCount">0</span>
+          </div>
+
+          <div id="ticketBody">
+            <p class="ticket-empty" data-i18n="ticketEmpty"></p>
+          </div>
+
+          <div class="ticket-totals" id="ticketTotals" style="display:none;">
+            <div class="row"><span data-i18n="estDuration">Estimated duration</span><span id="totalDuration">0</span></div>
+            <div class="row total"><span data-i18n="estTotal">Estimated total</span><span id="totalPrice">$0</span></div>
+          </div>
+
+          <div class="schedule" id="scheduleBox" style="display:none;">
+            <label for="apptDate" data-i18n="prefDate">Preferred date</label>
+            <input type="date" id="apptDate">
+
+            <label data-i18n="prefTime">Preferred time</label>
+            <div id="slotsWrap">
+              <p class="ticket-note" id="pickDateFirst" data-i18n="pickDateFirst" style="text-align:left; margin-top:0;"></p>
+              <div class="time-slots" id="timeSlots" style="display:none;"></div>
+              <div class="slot-legend" id="slotLegend" style="display:none;">
+                <span><i class="dot dot-open"></i><span data-i18n="slotLegendOpen">Available</span></span>
+                <span><i class="dot dot-taken"></i><span data-i18n="slotLegendTaken">Unavailable</span></span>
+              </div>
+            </div>
+
+            <label for="clientName" data-i18n="fullName">Full name</label>
+            <input type="text" id="clientName">
+
+            <label for="clientEmail" data-i18n="emailLabel2">Email</label>
+            <input type="email" id="clientEmail">
+
+            <label for="clientPhone" data-i18n="phoneLabel2">Phone</label>
+            <input type="tel" id="clientPhone">
+
+            <button class="ticket-submit" id="submitBtn" disabled data-i18n="requestAppt">Request Appointment</button>
+            <p class="ticket-note" data-i18n="ticketNote"></p>
+          </div>
+
+          <div class="confirm-box" id="confirmBox" style="display:none;"></div>
+        </aside>
+        <div class="drawer-backdrop" id="drawerBackdrop"></div>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap footer-inner">
+    <div class="footer-brand">
+      <a href="#" data-nav="index.html" class="logo"><img src="images/logo-mark.jpg" alt="DM Style Studio" class="logo-img logo-img-footer"></a>
+      <div class="footer-social">
+        <a class="social-icon social-call" id="footerCall" href="#" aria-label="Call">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6.62 10.79a15.05 15.05 0 0 0 6.59 6.59l2.2-2.2a1 1 0 0 1 1.02-.24 11.3 11.3 0 0 0 3.54.57 1 1 0 0 1 1 1V20a1 1 0 0 1-1 1C10.4 21 3 13.6 3 4a1 1 0 0 1 1-1h3.5a1 1 0 0 1 1 1c0 1.24.2 2.45.57 3.54a1 1 0 0 1-.25 1.02l-2.2 2.2z"/></svg>
+        </a>
+        <a class="social-icon social-whatsapp" id="footerWhatsapp" href="#" target="_blank" rel="noopener" aria-label="WhatsApp">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.29-1.39a9.9 9.9 0 0 0 4.75 1.21h.01c5.46 0 9.9-4.45 9.9-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2m0 1.67c2.2 0 4.27.86 5.82 2.42a8.19 8.19 0 0 1 2.41 5.82c0 4.55-3.7 8.24-8.24 8.24a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.14.82.84-3.06-.2-.32a8.18 8.18 0 0 1-1.26-4.37c0-4.55 3.7-8.22 8.26-8.22M8.53 6.98c-.17 0-.45.06-.68.32-.23.25-.9.87-.9 2.13 0 1.25.92 2.46 1.05 2.63.13.17 1.8 2.88 4.43 3.93 2.19.87 2.64.7 3.11.65.48-.04 1.55-.63 1.77-1.24.22-.61.22-1.13.15-1.24-.06-.11-.24-.17-.5-.3-.26-.13-1.55-.77-1.79-.86-.24-.09-.42-.13-.59.13-.17.26-.68.86-.83 1.03-.15.17-.31.19-.57.06-.26-.13-1.09-.4-2.08-1.28-.77-.68-1.29-1.53-1.44-1.79-.15-.26-.02-.4.11-.53.12-.12.26-.31.39-.47.13-.15.17-.26.26-.43.09-.17.04-.32-.02-.45-.06-.13-.59-1.46-.82-1.99-.21-.5-.43-.44-.59-.45z"/></svg>
+        </a>
+        <a class="social-icon social-instagram" id="footerInstagram" href="#" target="_blank" rel="noopener" aria-label="Instagram">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"/></svg>
+        </a>
+        <a class="social-icon social-tiktok" id="footerTiktok" href="#" target="_blank" rel="noopener" aria-label="TikTok">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.6 5.82s.51.5 0 0A4.278 4.278 0 0 1 15.54 3h-3.09v12.4a2.592 2.592 0 0 1-2.59 2.5c-1.42 0-2.6-1.16-2.6-2.6 0-1.72 1.66-3.01 3.37-2.48V9.66c-3.45-.46-6.47 2.22-6.47 5.64 0 3.33 2.76 5.7 5.69 5.7 3.14 0 5.69-2.55 5.69-5.7V9.01a7.35 7.35 0 0 0 4.3 1.38V7.3s-1.88.09-3.24-1.48z"/></svg>
+        </a>
+        <a class="social-icon social-facebook" id="footerFacebook" href="#" target="_blank" rel="noopener" aria-label="Facebook">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M13.5 9H15V6.5h-1.5C11.57 6.5 10 8.07 10 10v1.5H8V14h2v7h2.5v-7H15l.5-2.5H12.5V10c0-.55.45-1 1-1z"/></svg>
+        </a>
+      </div>
+    </div>
+    <div class="footer-links">
+      <a href="#" data-nav="index.html" data-i18n="navHome">Home</a>
+      <a href="#" data-nav="contact.html" data-i18n="navContact">Contact</a>
+      <a href="#" data-nav="manage.html" class="staff-link">Staff</a>
+    </div>
+    <p class="fine">&copy; 2026 DM Style Studio. <span data-i18n="footerRights"></span></p>
+  </div>
+</footer>
+
+<!-- CHECK APPOINTMENT MODAL -->
+<div class="modal-overlay" id="checkModalOverlay">
+  <div class="modal">
+    <button class="modal-close" id="modalClose" aria-label="Close">✕</button>
+    <h3 data-i18n="checkModalTitle">Check My Appointment</h3>
+    <p class="sub" data-i18n="checkModalSub"></p>
+    <div class="field">
+      <label for="lookupEmail" data-i18n="emailLabel2">Email</label>
+      <input type="email" id="lookupEmail" placeholder="jane@email.com">
+    </div>
+    <button class="ticket-submit" id="lookupBtn" data-i18n="lookupBtn">Look Up</button>
+    <div class="modal-result" id="modalResult" style="display:none;"></div>
+  </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="data.js"></script>
+<script>
+const lang = initChrome();
+
+const savedCart = Cart.read();
+let selected = savedCart.selected;       // array of {serviceId, optionIndex}
+let activeCat = 'All';
+let selectedTime = savedCart.time;
+
+function persistCart(){
+  Cart.write({ selected, date: document.getElementById('apptDate').value, time: selectedTime });
+}
+
+/* ---------------- CATEGORY TABS ---------------- */
+function renderTabs(){
+  const tabsEl = document.getElementById('catTabs');
+  const cats = categories(lang);
+  const allLabel = lang==='en' ? 'All' : 'Tout';
+  const all = [allLabel, ...cats];
+  tabsEl.innerHTML = all.map(c =>
+    `<button class="cat-tab ${(c===activeCat || (activeCat==='All' && c===allLabel)) ? 'active':''}" data-cat="${c}">${c}</button>`
+  ).join('');
+  tabsEl.querySelectorAll('.cat-tab').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      const val = btn.dataset.cat;
+      activeCat = (val===allLabel) ? 'All' : val;
+      renderTabs();
+      renderServices();
+    });
+  });
+}
+
+/* ---------------- SERVICE LIST ---------------- */
+function isSelected(serviceId, optIdx){
+  return selected.some(x => x.serviceId===serviceId && x.optionIndex===optIdx);
+}
+
+function renderServices(){
+  const groupsEl = document.getElementById('serviceGroups');
+  const cats = activeCat === 'All' ? categories(lang) : [activeCat];
+  groupsEl.innerHTML = cats.map(cat => {
+    const items = SERVICES.filter(s => s.cat[lang] === cat);
+    return `
+      <div class="service-group">
+        <h3>${cat}</h3>
+        <div class="group-sub">${items.length} ${items.length>1?'services':'service'}</div>
+        ${items.map(s => renderServiceCard(s)).join('')}
+      </div>
+    `;
+  }).join('');
+
+  groupsEl.querySelectorAll('.add-btn[data-single]').forEach(btn=>{
+    btn.addEventListener('click', ()=> toggleOption(btn.dataset.id, 0));
+  });
+  groupsEl.querySelectorAll('.option-row').forEach(row=>{
+    row.addEventListener('click', ()=> toggleOption(row.dataset.id, parseInt(row.dataset.opt,10)));
+  });
+}
+
+function renderServiceCard(s){
+  const single = s.options.length === 1 && !s.options[0].label;
+  const notes = s.notes[lang] || [];
+  const notesHtml = notes.length ? `<ul class="service-notes">${notes.map(n=>`<li>${n}</li>`).join('')}</ul>` : '';
+  const descHtml = s.desc[lang] ? `<p class="desc">${s.desc[lang]}</p>` : '';
+
+  if(single){
+    const opt = s.options[0];
+    return `
+      <div class="service-card">
+        <div class="service-info">
+          <h4>${s.name[lang]}</h4>
+          ${descHtml}
+          ${notesHtml}
+        </div>
+        <div class="service-row-single">
+          <div class="service-meta">
+            <span>${formatDuration(opt.duration, lang)}</span>
+            <span class="price">$${opt.price}</span>
+          </div>
+          <button class="add-btn ${isSelected(s.id,0)?'added':''}" data-single data-id="${s.id}" aria-label="${s.name[lang]}">
+            ${isSelected(s.id,0) ? '✓' : '+'}
+          </button>
+        </div>
+      </div>
+    `;
+  }
+
+  return `
+    <div class="service-card">
+      <div class="service-info">
+        <h4>${s.name[lang]}</h4>
+        ${descHtml}
+        ${notesHtml}
+      </div>
+      <div class="service-options">
+        ${s.options.map((opt,i)=>`
+          <div class="option-row" data-id="${s.id}" data-opt="${i}" style="cursor:pointer; ${isSelected(s.id,i)?'border-color:var(--beige);':''}">
+            <span class="opt-label">${opt.label[lang]}</span>
+            <span class="opt-meta">
+              <span>${formatDuration(opt.duration, lang)}</span>
+              <span class="price">$${opt.price}</span>
+              <span class="add-btn ${isSelected(s.id,i)?'added':''}" style="width:32px;height:32px;font-size:1.1rem;">${isSelected(s.id,i)?'✓':'+'}</span>
+            </span>
+          </div>
+        `).join('')}
+      </div>
+    </div>
+  `;
+}
+
+/* ---------------- SELECTION LOGIC ---------------- */
+function toggleOption(serviceId, optIdx){
+  if(isSelected(serviceId, optIdx)){
+    selected = selected.filter(x => !(x.serviceId===serviceId && x.optionIndex===optIdx));
+  } else {
+    selected.push({serviceId, optionIndex:optIdx});
+  }
+  persistCart();
+  renderServices();
+  renderTicket();
+}
+function removeSelection(serviceId, optIdx){
+  selected = selected.filter(x => !(x.serviceId===serviceId && x.optionIndex===optIdx));
+  persistCart();
+  renderServices();
+  renderTicket();
+}
+function resolveSelected(){
+  return selected.map(sel=>{
+    const s = SERVICES.find(x=>x.id===sel.serviceId);
+    const opt = s.options[sel.optionIndex];
+    return { service:s, option:opt, serviceId:sel.serviceId, optionIndex:sel.optionIndex };
+  });
+}
+
+/* ---------------- TICKET ---------------- */
+function renderTicket(){
+  const t = I18N[lang];
+  const body = document.getElementById('ticketBody');
+  const totalsEl = document.getElementById('ticketTotals');
+  const scheduleBox = document.getElementById('scheduleBox');
+  const countEl = document.getElementById('itemCount');
+
+  countEl.textContent = `${selected.length} ${selected.length===1 ? t.itemWord : t.itemsWord}`;
+
+  if(selected.length === 0){
+    body.innerHTML = `<p class="ticket-empty">${t.ticketEmpty}</p>`;
+    totalsEl.style.display = 'none';
+    scheduleBox.style.display = 'none';
+    return;
+  }
+
+  const items = resolveSelected();
+  body.innerHTML = items.map(it => {
+    const displayName = it.option.label ? `${it.service.name[lang]} — ${it.option.label[lang]}` : it.service.name[lang];
+    return `
+      <div class="ticket-item">
+        <div>
+          <div class="ti-name">${displayName}</div>
+          <div class="ti-meta">${formatDuration(it.option.duration, lang)} · $${it.option.price}</div>
+        </div>
+        <button class="ti-remove" data-sid="${it.serviceId}" data-oidx="${it.optionIndex}" aria-label="remove">✕</button>
+      </div>
+    `;
+  }).join('');
+
+  body.querySelectorAll('.ti-remove').forEach(btn=>{
+    btn.addEventListener('click', ()=> removeSelection(btn.dataset.sid, parseInt(btn.dataset.oidx,10)));
+  });
+
+  const totalDuration = items.reduce((sum,it)=>sum+it.option.duration,0);
+  const totalPrice = items.reduce((sum,it)=>sum+it.option.price,0);
+  document.getElementById('totalDuration').textContent = formatDuration(totalDuration, lang);
+  document.getElementById('totalPrice').textContent = `$${totalPrice}`;
+  totalsEl.style.display = 'block';
+  scheduleBox.style.display = 'block';
+
+  renderSlotsForDate(document.getElementById('apptDate').value);
+  validateForm();
+}
+
+/* ---------------- CONFLICT-AWARE TIME SLOTS ---------------- */
+async function getTakenTimesForDate(date){
+  const [bookings, blocked] = await Promise.all([Bookings.all(), Blocked.all()]);
+  const taken = new Set();
+  bookings.filter(b=>b.date===date).forEach(b=> taken.add(b.time));
+  blocked.filter(b=>b.date===date).forEach(b=> taken.add(b.time));
+  return taken;
+}
+
+let slotsRequestId = 0;
+async function renderSlotsForDate(date){
+  const wrap = document.getElementById('timeSlots');
+  const legend = document.getElementById('slotLegend');
+  const hint = document.getElementById('pickDateFirst');
+
+  if(!date){
+    wrap.style.display = 'none';
+    legend.style.display = 'none';
+    hint.style.display = 'block';
+    hint.textContent = I18N[lang].pickDateFirst;
+    return;
+  }
+
+  const daySlots = getTimeSlotsForDate(date);
+  if(daySlots.length === 0){
+    wrap.style.display = 'none';
+    legend.style.display = 'none';
+    hint.style.display = 'block';
+    hint.textContent = I18N[lang].closedThisDay;
+    if(selectedTime){ selectedTime = null; persistCart(); }
+    validateForm();
+    return;
+  }
+
+  hint.style.display = 'none';
+  wrap.style.display = 'flex';
+  legend.style.display = 'flex';
+
+  const requestId = ++slotsRequestId;
+  const taken = await getTakenTimesForDate(date);
+  if(requestId !== slotsRequestId) return; // a newer date was picked while this was loading
+  if(selectedTime && (taken.has(selectedTime) || isPastSlot(date, selectedTime))) selectedTime = null;
+
+  wrap.innerHTML = daySlots.map(tm=>{
+    const isTaken = taken.has(tm) || isPastSlot(date, tm);
+    return `<button type="button" class="slot ${tm===selectedTime?'selected':''} ${isTaken?'taken':''}" ${isTaken?'disabled':''} data-time="${tm}">${formatSlotTime(tm, lang)}</button>`;
+  }).join('');
+
+  wrap.querySelectorAll('.slot:not(.taken)').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      selectedTime = btn.dataset.time;
+      wrap.querySelectorAll('.slot').forEach(b=>b.classList.remove('selected'));
+      btn.classList.add('selected');
+      persistCart();
+      validateForm();
+    });
+  });
+  validateForm();
+}
+
+document.getElementById('apptDate').addEventListener('change', (e)=>{
+  selectedTime = null;
+  persistCart();
+  renderSlotsForDate(e.target.value);
+});
+
+/* ---------------- FORM VALIDATION ---------------- */
+function validateForm(){
+  const date = document.getElementById('apptDate').value;
+  const name = document.getElementById('clientName').value.trim();
+  const email = document.getElementById('clientEmail').value.trim();
+  const submitBtn = document.getElementById('submitBtn');
+  const ok = selected.length > 0 && date && selectedTime && name && email;
+  submitBtn.disabled = !ok;
+}
+['clientName','clientEmail','clientPhone'].forEach(id=>{
+  document.getElementById(id).addEventListener('input', validateForm);
+});
+
+/* ---------------- SUBMIT BOOKING ---------------- */
+document.getElementById('submitBtn').addEventListener('click', async ()=>{
+  const t = I18N[lang];
+  const submitBtn = document.getElementById('submitBtn');
+  const items = resolveSelected();
+  const date = document.getElementById('apptDate').value;
+  const name = document.getElementById('clientName').value.trim();
+  const email = document.getElementById('clientEmail').value.trim();
+  const phone = document.getElementById('clientPhone').value.trim();
+  const dateStr = new Date(date+'T00:00').toLocaleDateString(lang==='fr' ? 'fr-CA' : 'en-US', {weekday:'long',month:'long',day:'numeric'});
+  const serviceNames = items.map(it => it.option.label ? `${it.service.name[lang]} — ${it.option.label[lang]}` : it.service.name[lang]);
+
+  submitBtn.disabled = true;
+
+  if(isPastSlot(date, selectedTime)){
+    alert(t.pastTimeError);
+    submitBtn.disabled = false;
+    renderSlotsForDate(date);
+    return;
+  }
+  // re-check right before writing, in case the slot was taken since the list last loaded
+  const takenNow = await getTakenTimesForDate(date);
+  if(takenNow.has(selectedTime)){
+    alert(t.slotConflict);
+    submitBtn.disabled = false;
+    selectedTime = null;
+    renderSlotsForDate(date);
+    return;
+  }
+
+  // persist booking so this slot shows as taken for every device — client and staff
+  await Bookings.add({ name, email, phone, date, dateStr, time: selectedTime, services: serviceNames, source:'client' });
+  Cart.clear();
+
+  document.getElementById('ticketBody').style.display='none';
+  document.getElementById('ticketTotals').style.display='none';
+  document.getElementById('scheduleBox').style.display='none';
+
+  const confirmBox = document.getElementById('confirmBox');
+  confirmBox.style.display = 'block';
+  confirmBox.innerHTML = `
+    <div class="mark">✓</div>
+    <h4>${t.confirmedTitle(name.split(' ')[0])}</h4>
+    <p>${t.confirmedBody(items.length, dateStr, formatSlotTime(selectedTime, lang))}</p>
+    <button class="btn-ghost" id="startOver" style="width:100%;">${t.startOver}</button>
+  `;
+  document.getElementById('startOver').addEventListener('click', ()=>{
+    selected = [];
+    selectedTime = null;
+    document.getElementById('apptDate').value='';
+    document.getElementById('clientName').value='';
+    document.getElementById('clientEmail').value='';
+    document.getElementById('clientPhone').value='';
+    confirmBox.style.display='none';
+    document.getElementById('ticketBody').style.display='block';
+    renderServices();
+    renderTicket();
+  });
+});
+
+/* ---------------- CHECK APPOINTMENT MODAL ---------------- */
+const modalOverlay = document.getElementById('checkModalOverlay');
+function openModal(){
+  modalOverlay.classList.add('open');
+  document.getElementById('modalResult').style.display = 'none';
+  document.getElementById('lookupEmail').value = '';
+}
+function closeModal(){ modalOverlay.classList.remove('open'); }
+document.getElementById('checkApptNavBtn').addEventListener('click', openModal);
+document.getElementById('modalClose').addEventListener('click', closeModal);
+modalOverlay.addEventListener('click', (e)=>{ if(e.target === modalOverlay) closeModal(); });
+
+document.getElementById('lookupBtn').addEventListener('click', async ()=>{
+  const t = I18N[lang];
+  const email = document.getElementById('lookupEmail').value.trim().toLowerCase();
+  const resultEl = document.getElementById('modalResult');
+  resultEl.style.display = 'block';
+  resultEl.innerHTML = `<p>${t.loadingSlots}</p>`;
+  const bookings = await Bookings.all();
+  const matches = bookings.filter(b => b.email && b.email.toLowerCase() === email);
+
+  if(matches.length === 0){
+    resultEl.innerHTML = `
+      <p>${t.noResults}</p>
+      <div class="modal-fallback">
+        <p>${t.fallbackText}</p>
+        <div class="contact-quick">
+          <a class="quick-btn call" href="tel:${PHONE_TEL}">${t.callBtn}</a>
+          <a class="quick-btn whatsapp" href="https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(WHATSAPP_PRESET_MSG[lang])}" target="_blank" rel="noopener">${t.whatsappBtn}</a>
+        </div>
+      </div>
+    `;
+  } else {
+    resultEl.innerHTML = `<p style="margin-bottom:10px;">${t.lookupResultFor(matches.length)}</p>` +
+      matches.map(b => `
+        <div class="booking">
+          <div class="bk-date">${b.dateStr || b.date} · ${formatSlotTime(b.time, lang)}</div>
+          <div class="bk-services">${b.services.join(', ')}</div>
+        </div>
+      `).join('');
+  }
+});
+
+/* ---------------- CART DRAWER ---------------- */
+const ticketDrawer = document.getElementById('ticket');
+const drawerBackdrop = document.getElementById('drawerBackdrop');
+window.toggleCartDrawer = function(forceOpen){
+  const willOpen = typeof forceOpen === 'boolean' ? forceOpen : !ticketDrawer.classList.contains('open');
+  ticketDrawer.classList.toggle('open', willOpen);
+  drawerBackdrop.classList.toggle('open', willOpen);
+};
+document.getElementById('drawerClose').addEventListener('click', ()=> window.toggleCartDrawer(false));
+drawerBackdrop.addEventListener('click', ()=> window.toggleCartDrawer(false));
+
+/* ---------------- INIT ---------------- */
+document.getElementById('apptDate').min = new Date().toISOString().split('T')[0];
+if(savedCart.date) document.getElementById('apptDate').value = savedCart.date;
+renderTabs();
+renderServices();
+renderTicket();
+renderSlotsForDate(savedCart.date || '');
+if(window.location.hash === '#book') window.toggleCartDrawer(true);
+</script>
+
+</body>
+</html>
