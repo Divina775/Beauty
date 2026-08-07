@@ -174,7 +174,12 @@
 const lang = initChrome();
 
 const savedCart = Cart.read();
-let selected = savedCart.selected;       // array of {serviceId, optionIndex}
+// drop any saved selection that no longer matches a real service — the catalog can
+// change over time, and a stale entry here would otherwise silently break rendering
+let selected = (savedCart.selected || []).filter(sel=>{
+  const s = SERVICES.find(x=>x.id===sel.serviceId);
+  return !!(s && s.options[sel.optionIndex]);
+});
 let activeCat = 'All';
 let selectedTime = savedCart.time;
 
@@ -297,11 +302,13 @@ function removeSelection(serviceId, optIdx){
   renderTicket();
 }
 function resolveSelected(){
-  return selected.map(sel=>{
-    const s = SERVICES.find(x=>x.id===sel.serviceId);
-    const opt = s.options[sel.optionIndex];
-    return { service:s, option:opt, serviceId:sel.serviceId, optionIndex:sel.optionIndex };
-  });
+  return selected
+    .map(sel=>{
+      const s = SERVICES.find(x=>x.id===sel.serviceId);
+      const opt = s && s.options[sel.optionIndex];
+      return (s && opt) ? { service:s, option:opt, serviceId:sel.serviceId, optionIndex:sel.optionIndex } : null;
+    })
+    .filter(Boolean);
 }
 
 /* ---------------- TICKET ---------------- */
@@ -350,13 +357,9 @@ function renderTicket(){
   validateForm();
 }
 
-/* ---------------- CONFLICT-AWARE TIME SLOTS ---------------- */
-async function getTakenTimesForDate(date){
-  const [bookings, blocked] = await Promise.all([Bookings.all(), Blocked.all()]);
-  const taken = new Set();
-  bookings.filter(b=>b.date===date).forEach(b=> taken.add(b.time));
-  blocked.filter(b=>b.date===date).forEach(b=> taken.add(b.time));
-  return taken;
+/* ---------------- CONFLICT-AWARE TIME SLOTS (2 workers, duration-aware) ---------------- */
+function getTotalDuration(){
+  return resolveSelected().reduce((sum,it)=>sum+it.option.duration, 0) || 30;
 }
 
 let slotsRequestId = 0;
@@ -388,15 +391,34 @@ async function renderSlotsForDate(date){
   wrap.style.display = 'flex';
   legend.style.display = 'flex';
 
-  const requestId = ++slotsRequestId;
-  const taken = await getTakenTimesForDate(date);
-  if(requestId !== slotsRequestId) return; // a newer date was picked while this was loading
-  if(selectedTime && (taken.has(selectedTime) || isPastSlot(date, selectedTime))) selectedTime = null;
+  try{
+    const duration = getTotalDuration();
+    const closeMin = timeToMinutes(getBusinessHoursForDate(date).close);
 
-  wrap.innerHTML = daySlots.map(tm=>{
-    const isTaken = taken.has(tm) || isPastSlot(date, tm);
-    return `<button type="button" class="slot ${tm===selectedTime?'selected':''} ${isTaken?'taken':''}" ${isTaken?'disabled':''} data-time="${tm}">${formatSlotTime(tm, lang)}</button>`;
-  }).join('');
+    const requestId = ++slotsRequestId;
+    const byWorker = await getOccupiedByWorker(date);
+    if(requestId !== slotsRequestId) return; // a newer date was picked while this was loading
+
+    const isBookable = (tm) => {
+      const startMin = timeToMinutes(tm);
+      if(startMin + duration > closeMin) return false;
+      if(isPastSlot(date, tm)) return false;
+      return findFreeWorker(byWorker, startMin, startMin + duration) > 0;
+    };
+    if(selectedTime && !isBookable(selectedTime)) selectedTime = null;
+
+    wrap.innerHTML = daySlots.map(tm=>{
+      const isTaken = !isBookable(tm);
+      return `<button type="button" class="slot ${tm===selectedTime?'selected':''} ${isTaken?'taken':''}" ${isTaken?'disabled':''} data-time="${tm}">${formatSlotTime(tm, lang)}</button>`;
+    }).join('');
+  }catch(e){
+    console.error('renderSlotsForDate failed:', e);
+    wrap.style.display = 'none';
+    legend.style.display = 'none';
+    hint.style.display = 'block';
+    hint.textContent = I18N[lang].slotsLoadError;
+    return;
+  }
 
   wrap.querySelectorAll('.slot:not(.taken)').forEach(btn=>{
     btn.addEventListener('click', ()=>{
@@ -440,6 +462,7 @@ document.getElementById('submitBtn').addEventListener('click', async ()=>{
   const phone = document.getElementById('clientPhone').value.trim();
   const dateStr = new Date(date+'T00:00').toLocaleDateString(lang==='fr' ? 'fr-CA' : 'en-US', {weekday:'long',month:'long',day:'numeric'});
   const serviceNames = items.map(it => it.option.label ? `${it.service.name[lang]} — ${it.option.label[lang]}` : it.service.name[lang]);
+  const duration = items.reduce((sum,it)=>sum+it.option.duration, 0) || 30;
 
   submitBtn.disabled = true;
 
@@ -449,9 +472,22 @@ document.getElementById('submitBtn').addEventListener('click', async ()=>{
     renderSlotsForDate(date);
     return;
   }
-  // re-check right before writing, in case the slot was taken since the list last loaded
-  const takenNow = await getTakenTimesForDate(date);
-  if(takenNow.has(selectedTime)){
+
+  const startMin = timeToMinutes(selectedTime);
+  const endMin = startMin + duration;
+  const hours = getBusinessHoursForDate(date);
+  if(!hours || endMin > timeToMinutes(hours.close)){
+    alert(t.slotConflict);
+    submitBtn.disabled = false;
+    selectedTime = null;
+    renderSlotsForDate(date);
+    return;
+  }
+
+  // re-check right before writing, in case both workers were taken since the list last loaded
+  const byWorker = await getOccupiedByWorker(date);
+  const assignedWorker = findFreeWorker(byWorker, startMin, endMin);
+  if(!assignedWorker){
     alert(t.slotConflict);
     submitBtn.disabled = false;
     selectedTime = null;
@@ -460,7 +496,7 @@ document.getElementById('submitBtn').addEventListener('click', async ()=>{
   }
 
   // persist booking so this slot shows as taken for every device — client and staff
-  await Bookings.add({ name, email, phone, date, dateStr, time: selectedTime, services: serviceNames, source:'client' });
+  await Bookings.add({ name, email, phone, date, dateStr, time: selectedTime, duration, worker: assignedWorker, services: serviceNames, source:'client' });
   Cart.clear();
 
   document.getElementById('ticketBody').style.display='none';
@@ -469,11 +505,31 @@ document.getElementById('submitBtn').addEventListener('click', async ()=>{
 
   const confirmBox = document.getElementById('confirmBox');
   confirmBox.style.display = 'block';
+  const notifyMsg = t.notifyStaffMsg(name, serviceNames.join(', '), dateStr, formatSlotTime(selectedTime, lang), phone);
+  const waUrl = `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(notifyMsg)}`;
+  const smsUrl = `sms:${PHONE_TEL}?body=${encodeURIComponent(notifyMsg)}`;
+  const mailUrl = `mailto:${STUDIO_EMAIL}?subject=${encodeURIComponent('New booking — ' + name)}&body=${encodeURIComponent(notifyMsg)}`;
   confirmBox.innerHTML = `
     <div class="mark">✓</div>
     <h4>${t.confirmedTitle(name.split(' ')[0])}</h4>
     <p>${t.confirmedBody(items.length, dateStr, formatSlotTime(selectedTime, lang))}</p>
-    <button class="btn-ghost" id="startOver" style="width:100%;">${t.startOver}</button>
+    <p class="ticket-note" style="margin-top:0;">${t.notifyStaffIntro}</p>
+    <div class="contact-quick" style="justify-content:center; margin-bottom:18px;">
+      <a class="quick-btn whatsapp" href="${waUrl}" target="_blank" rel="noopener">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.29-1.39a9.9 9.9 0 0 0 4.75 1.21h.01c5.46 0 9.9-4.45 9.9-9.91 0-2.65-1.03-5.14-2.9-7.01A9.82 9.82 0 0 0 12.04 2m0 1.67c2.2 0 4.27.86 5.82 2.42a8.19 8.19 0 0 1 2.41 5.82c0 4.55-3.7 8.24-8.24 8.24a8.2 8.2 0 0 1-4.19-1.15l-.3-.18-3.14.82.84-3.06-.2-.32a8.18 8.18 0 0 1-1.26-4.37c0-4.55 3.7-8.22 8.26-8.22M8.53 6.98c-.17 0-.45.06-.68.32-.23.25-.9.87-.9 2.13 0 1.25.92 2.46 1.05 2.63.13.17 1.8 2.88 4.43 3.93 2.19.87 2.64.7 3.11.65.48-.04 1.55-.63 1.77-1.24.22-.61.22-1.13.15-1.24-.06-.11-.24-.17-.5-.3-.26-.13-1.55-.77-1.79-.86-.24-.09-.42-.13-.59.13-.17.26-.68.86-.83 1.03-.15.17-.31.19-.57.06-.26-.13-1.09-.4-2.08-1.28-.77-.68-1.29-1.53-1.44-1.79-.15-.26-.02-.4.11-.53.12-.12.26-.31.39-.47.13-.15.17-.26.26-.43.09-.17.04-.32-.02-.45-.06-.13-.59-1.46-.82-1.99-.21-.5-.43-.44-.59-.45z"/></svg>
+        ${t.notifyStaffBtn}
+      </a>
+      <a class="quick-btn call" href="${smsUrl}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"/></svg>
+        ${t.notifyTextBtn}
+      </a>
+      <a class="quick-btn call" href="${mailUrl}">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="m3 7 9 6 9-6"/></svg>
+        ${t.notifyEmailBtn}
+      </a>
+    </div>
+    <p class="ticket-note">${t.depositReminderConfirm(STUDIO_EMAIL)}</p>
+    <button class="btn-ghost" id="startOver" style="width:100%; margin-top:12px;">${t.startOver}</button>
   `;
   document.getElementById('startOver').addEventListener('click', ()=>{
     selected = [];
@@ -501,7 +557,7 @@ document.getElementById('checkApptNavBtn').addEventListener('click', openModal);
 document.getElementById('modalClose').addEventListener('click', closeModal);
 modalOverlay.addEventListener('click', (e)=>{ if(e.target === modalOverlay) closeModal(); });
 
-document.getElementById('lookupBtn').addEventListener('click', async ()=>{
+async function runAppointmentLookup(){
   const t = I18N[lang];
   const email = document.getElementById('lookupEmail').value.trim().toLowerCase();
   const resultEl = document.getElementById('modalResult');
@@ -523,14 +579,33 @@ document.getElementById('lookupBtn').addEventListener('click', async ()=>{
     `;
   } else {
     resultEl.innerHTML = `<p style="margin-bottom:10px;">${t.lookupResultFor(matches.length)}</p>` +
-      matches.map(b => `
-        <div class="booking">
-          <div class="bk-date">${b.dateStr || b.date} · ${formatSlotTime(b.time, lang)}</div>
+      matches.map(b => {
+        const cancelled = b.status === 'cancelled';
+        return `
+        <div class="booking"${cancelled ? ' style="opacity:.6;"' : ''}>
+          <div class="bk-date"${cancelled ? ' style="text-decoration:line-through;"' : ''}>${b.dateStr || b.date} · ${formatSlotTime(b.time, lang)} ${cancelled ? `<span class="cancelled-tag">(${t.cancelledLabel})</span>` : ''}</div>
           <div class="bk-services">${b.services.join(', ')}</div>
+          ${!cancelled ? `<div class="bk-accept"><button class="cancel-btn" data-cancel-id="${b.id}">${t.cancelBookingBtn}</button></div>` : ''}
         </div>
-      `).join('');
+      `;
+      }).join('');
+
+    resultEl.querySelectorAll('.cancel-btn').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        if(!confirm(t.clientCancelConfirm)) return;
+        const reason = (prompt(t.clientCancelReasonPrompt) || '').trim() || '(not provided)';
+        const bookingId = btn.dataset.cancelId;
+        const b = matches.find(m=>m.id===bookingId);
+        await Bookings.update(bookingId, {
+          status: 'cancelled', cancelledBy: b ? b.name : '', cancelReason: reason,
+          cancelledBySource: 'client', cancelledAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        runAppointmentLookup();
+      });
+    });
   }
-});
+}
+document.getElementById('lookupBtn').addEventListener('click', runAppointmentLookup);
 
 /* ---------------- CART DRAWER ---------------- */
 const ticketDrawer = document.getElementById('ticket');

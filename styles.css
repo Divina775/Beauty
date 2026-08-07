@@ -343,9 +343,22 @@ footer .fine{color:var(--text-muted); font-size:.78rem;}
 .modal p.sub{color:var(--text-muted); font-size:.86rem; margin-bottom:22px;}
 .modal .field{margin-bottom:16px;}
 .modal-result{ margin-top:20px; padding-top:18px; border-top:1px dashed var(--beige-soft); }
-.modal-result .booking{ padding:14px 0; border-bottom:1px solid var(--line); font-size:.88rem; }
-.modal-result .booking .bk-date{color:var(--beige); font-weight:600;}
-.modal-result .booking .bk-services{color:var(--text-muted); font-size:.82rem; margin-top:4px;}
+.booking{ padding:14px 0; border-bottom:1px solid var(--line); font-size:.88rem; }
+.booking .bk-date{color:var(--beige); font-weight:600;}
+.booking .bk-services{color:var(--text-muted); font-size:.82rem; margin-top:4px;}
+.booking .bk-accept{margin-top:8px;}
+.accept-btn{
+  background:transparent; border:1px solid var(--beige-soft); color:var(--beige); padding:6px 14px; font-size:.72rem;
+  letter-spacing:.05em; text-transform:uppercase; cursor:pointer; transition:.2s ease;
+}
+.accept-btn:hover{background:var(--beige); color:#1a1a18;}
+.accepted-tag{color:var(--ok); font-size:.78rem; font-weight:600;}
+.cancel-btn{
+  background:transparent; border:1px solid var(--warn); color:var(--warn); padding:6px 14px; font-size:.72rem;
+  letter-spacing:.05em; text-transform:uppercase; cursor:pointer; transition:.2s ease;
+}
+.cancel-btn:hover{background:var(--warn); color:#fff;}
+.cancelled-tag{color:var(--warn); font-size:.78rem; font-weight:600;}
 .modal-fallback{margin-top:18px; font-size:.84rem; color:var(--text-muted);}
 .modal-fallback .contact-quick{margin-top:12px;}
 
@@ -361,17 +374,23 @@ footer .fine{color:var(--text-muted); font-size:.78rem;}
 .manage-panel{ background:var(--panel); border:1px solid var(--line); padding:32px; margin-bottom:32px; }
 .manage-panel h3{font-size:1.1rem; margin-bottom:6px;}
 .manage-panel .sub{color:var(--text-muted); font-size:.85rem; margin-bottom:22px;}
-.day-slot-grid{display:flex; flex-wrap:wrap; gap:10px; margin-top:16px;}
+.day-slot-grid{display:flex; flex-wrap:wrap; gap:10px; margin-top:16px; align-items:flex-start;}
 .day-slot{
-  padding:10px 14px; border:1px solid var(--line); font-size:.8rem; cursor:pointer; transition:.2s ease;
-  display:flex; flex-direction:column; gap:2px; min-width:84px;
+  border:1px solid var(--line); font-size:.8rem; min-width:168px; overflow:hidden;
 }
-.day-slot .t{font-weight:600;}
-.day-slot .s{font-size:.68rem; color:var(--text-muted); text-transform:uppercase; letter-spacing:.04em;}
-.day-slot.open{border-color:var(--line);}
-.day-slot.open:hover{border-color:var(--ok); color:var(--ok);}
-.day-slot.booked{border-color:var(--warn); background:rgba(180,119,107,.08);}
-.day-slot.blocked{border-color:var(--slate); background:rgba(87,83,75,.18);}
+.day-slot-time{ padding:8px 12px; font-weight:600; background:var(--panel-2); border-bottom:1px solid var(--line); }
+.worker-row{
+  padding:7px 12px; cursor:pointer; transition:.2s ease; display:flex; flex-direction:column; gap:1px;
+}
+.worker-row + .worker-row{ border-top:1px dashed var(--line); }
+.worker-row .w-label{ font-size:.64rem; letter-spacing:.05em; text-transform:uppercase; color:var(--text-muted); }
+.worker-row .w-status{ font-size:.78rem; }
+.worker-row.open .w-status{ color:var(--ok); }
+.worker-row.open:hover{ background:rgba(127,156,122,.1); }
+.worker-row.booked{ background:rgba(180,119,107,.08); }
+.worker-row.booked .w-status{ color:var(--warn); font-weight:600; }
+.worker-row.blocked{ background:rgba(87,83,75,.18); }
+.worker-row.blocked .w-status{ color:var(--text-muted); }
 .notice-banner{
   background:var(--panel-2); border:1px solid var(--beige-soft); padding:16px 20px; font-size:.82rem;
   color:var(--text-muted); margin-bottom:40px;

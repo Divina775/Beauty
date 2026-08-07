@@ -116,6 +116,10 @@ const Bookings = {
   async remove(id){
     if(!db) return;
     await db.collection('bookings').doc(id).delete();
+  },
+  async update(id, partial){
+    if(!db) return;
+    await db.collection('bookings').doc(id).update(partial);
   }
 };
 const Blocked = {
@@ -147,6 +151,7 @@ const Blocked = {
 /* ===================== CONTACT ===================== */
 const PHONE_TEL = '+16132423352';
 const WHATSAPP_NUMBER = '16132423352';
+const STUDIO_EMAIL = 'divinamiguelkanda@gmail.com';
 const INSTAGRAM_URL = 'https://www.instagram.com/dmstyle02?igsh=ZDl4MnZ1aWszNXR3&utm_source=qr';
 const TIKTOK_URL = 'https://www.tiktok.com/@dm_style01?_r=1&_t=ZP-98bYer6y5D4'; // TODO: replace with the real TikTok link
 const FACEBOOK_URL = 'https://www.facebook.com/share/1GDmeuvy5a/?mibextid=wwXIfr'; // TODO: replace with the real Facebook link
@@ -184,7 +189,7 @@ const I18N = {
     contactLede:"Questions about a service, a group booking, or something we haven't listed? Send us a note, call, or message us on WhatsApp.",
     studioLabel:"Studio", phoneLabel:"Phone", emailLabel:"Email", hoursLabel:"Hours",
     hoursValue:"Mon – Fri: 10:00 AM – 7:00 PM", hoursMuted:"Sat: 9:30 AM – 9:00 PM",
-    depositLabel:"Deposit", depositValue:"$25 non-refundable deposit required to confirm your appointment.",
+    depositLabel:"Deposit", depositValue:`A $25 non-refundable deposit is required to confirm your appointment, sent by Interac e-Transfer to ${STUDIO_EMAIL}.`,
     callBtn:"Call Us", whatsappBtn:"WhatsApp", checkApptBtn:"Check My Appointment",
     footerRights:"All rights reserved.",
     checkModalTitle:"Check My Appointment", checkModalSub:"Enter the email you used when booking to see your appointment on this device.",
@@ -196,18 +201,34 @@ const I18N = {
     confirmedTitle:(name)=>`Request received, ${name}.`,
     confirmedBody:(count,dateStr,time)=>`${count} service${count>1?'s':''} requested for ${dateStr} at ${time}. We'll confirm by email shortly.`,
     startOver:"Start a New Booking",
+    notifyStaffIntro:"Let us know however's easiest for you:",
+    notifyStaffBtn:"WhatsApp",
+    notifyTextBtn:"Text",
+    notifyEmailBtn:"Email",
+    notifyStaffMsg:(name,services,dateStr,time,phone)=>`New booking: ${name} — ${services} — ${dateStr} at ${time}${phone ? ' — ' + phone : ''}`,
+    depositReminderConfirm:(email)=>`Reminder: a $25 non-refundable deposit confirms your appointment — send it by Interac e-Transfer to ${email}.`,
     lookupResultFor:(count)=>`${count} appointment${count!==1?'s':''} found`,
     selectOption:"Choose a length",
     slotLegendOpen:"Available", slotLegendTaken:"Unavailable",
     pickDateFirst:"Pick a date to see available times.",
     closedThisDay:"We're closed that day — please pick another date.",
+    slotsLoadError:"Something went wrong loading times — please refresh the page and try again.",
     manageTitle:"Studio Availability", manageSub:"Manage bookings and blocked times — synced live across every device, whether booked by a client or added by staff.",
     pinTitle:"Staff Access", pinSub:"Enter the staff PIN to manage availability.",
     pinPlaceholder:"PIN", pinButton:"Unlock", pinError:"Incorrect PIN, please try again.",
     staffCalendarTitle:"Day Availability", staffCalendarSub:"Pick a date to see every time slot. Tap an open slot to block it, a blocked slot to reopen it, or a booked slot to cancel it.",
     pickStaffDate:"Select a date", loadingSlots:"Loading…",
     slotAvailable:"Available", slotBooked:"Booked", slotBlocked:"Blocked",
-    confirmCancelBooking:"Cancel this booking?",
+    workerLabel:(n)=>`Worker ${n}`,
+    lockNamePrompt:"Your name (so the team knows who locked this):",
+    acceptBookingBtn:"Accept", acceptedByPrefix:"✓ Accepted by",
+    acceptNamePrompt:"Your name (so your colleague knows you've got this):",
+    cancelNamePrompt:"Your name (so we know who cancelled this):",
+    cancelReasonPrompt:"Reason for cancelling:",
+    cancelledLabel:"Cancelled",
+    cancelBookingBtn:"Cancel Appointment",
+    clientCancelConfirm:"Cancel this appointment? Note: if you've already paid your $25 deposit, it is non-refundable.",
+    clientCancelReasonPrompt:"Reason for cancelling (optional):",
     dayBookingsTitle:"Bookings for this day",
     manualBookingTitle:"Add a Manual Booking", manualBookingSub:"Add an appointment taken by phone, in person, or elsewhere — it will appear in the calendar above and count toward availability.",
     manFullName:"Client name", manPhoneLabel:"Phone", manServiceLabel:"Service", manDateLabel:"Date", manTimeLabel:"Time",
@@ -245,7 +266,7 @@ const I18N = {
     contactLede:"Des questions sur un service, une réservation de groupe, ou autre chose? Envoyez-nous un message, appelez-nous, ou écrivez-nous sur WhatsApp.",
     studioLabel:"Studio", phoneLabel:"Téléphone", emailLabel:"Courriel", hoursLabel:"Horaire",
     hoursValue:"Lun – Ven : 10h00 – 19h00", hoursMuted:"Sam : 9h30 – 21h00",
-    depositLabel:"Dépôt", depositValue:"Dépôt non remboursable de 25$ requis pour confirmer votre rendez-vous.",
+    depositLabel:"Dépôt", depositValue:`Un dépôt non remboursable de 25$ est requis pour confirmer votre rendez-vous, envoyé par virement Interac à ${STUDIO_EMAIL}.`,
     callBtn:"Appelez-nous", whatsappBtn:"WhatsApp", checkApptBtn:"Vérifier mon rendez-vous",
     footerRights:"Tous droits réservés.",
     checkModalTitle:"Vérifier mon rendez-vous", checkModalSub:"Entrez le courriel utilisé lors de la réservation pour voir votre rendez-vous sur cet appareil.",
@@ -257,18 +278,34 @@ const I18N = {
     confirmedTitle:(name)=>`Demande reçue, ${name}.`,
     confirmedBody:(count,dateStr,time)=>`${count} service${count>1?'s':''} demandé${count>1?'s':''} pour le ${dateStr} à ${time}. Nous confirmerons par courriel sous peu.`,
     startOver:"Nouvelle réservation",
+    notifyStaffIntro:"Avisez-nous de la façon qui vous convient :",
+    notifyStaffBtn:"WhatsApp",
+    notifyTextBtn:"Texto",
+    notifyEmailBtn:"Courriel",
+    notifyStaffMsg:(name,services,dateStr,time,phone)=>`Nouvelle réservation : ${name} — ${services} — ${dateStr} à ${time}${phone ? ' — ' + phone : ''}`,
+    depositReminderConfirm:(email)=>`Rappel : un dépôt non remboursable de 25$ confirme votre rendez-vous — envoyez-le par virement Interac à ${email}.`,
     lookupResultFor:(count)=>`${count} rendez-vous trouvé${count!==1?'s':''}`,
     selectOption:"Choisissez une longueur",
     slotLegendOpen:"Disponible", slotLegendTaken:"Indisponible",
     pickDateFirst:"Choisissez une date pour voir les heures disponibles.",
     closedThisDay:"Nous sommes fermés ce jour-là — veuillez choisir une autre date.",
+    slotsLoadError:"Une erreur s'est produite lors du chargement des heures — veuillez actualiser la page et réessayer.",
     manageTitle:"Disponibilité du studio", manageSub:"Gérez les rendez-vous et les créneaux bloqués — synchronisés en direct sur tous les appareils, qu'ils soient réservés par une cliente ou ajoutés par le personnel.",
     pinTitle:"Accès du personnel", pinSub:"Entrez le NIP du personnel pour gérer les disponibilités.",
     pinPlaceholder:"NIP", pinButton:"Déverrouiller", pinError:"NIP incorrect, veuillez réessayer.",
     staffCalendarTitle:"Disponibilité du jour", staffCalendarSub:"Choisissez une date pour voir tous les créneaux. Touchez un créneau disponible pour le bloquer, un créneau bloqué pour le rouvrir, ou un créneau réservé pour l'annuler.",
     pickStaffDate:"Sélectionnez une date", loadingSlots:"Chargement…",
     slotAvailable:"Disponible", slotBooked:"Réservé", slotBlocked:"Bloqué",
-    confirmCancelBooking:"Annuler ce rendez-vous?",
+    workerLabel:(n)=>`Employé ${n}`,
+    lockNamePrompt:"Votre nom (pour que l'équipe sache qui a verrouillé ceci) :",
+    acceptBookingBtn:"Accepter", acceptedByPrefix:"✓ Accepté par",
+    acceptNamePrompt:"Votre nom (pour que votre collègue sache que vous vous en occupez) :",
+    cancelNamePrompt:"Votre nom (pour savoir qui a annulé ceci) :",
+    cancelReasonPrompt:"Raison de l'annulation :",
+    cancelledLabel:"Annulé",
+    cancelBookingBtn:"Annuler le rendez-vous",
+    clientCancelConfirm:"Annuler ce rendez-vous? Remarque : si vous avez déjà payé votre dépôt de 25$, il n'est pas remboursable.",
+    clientCancelReasonPrompt:"Raison de l'annulation (facultatif) :",
     dayBookingsTitle:"Réservations de cette journée",
     manualBookingTitle:"Ajouter un rendez-vous manuel", manualBookingSub:"Ajoutez un rendez-vous pris par téléphone, en personne ou ailleurs — il apparaîtra dans le calendrier ci-dessus et comptera dans les disponibilités.",
     manFullName:"Nom de la cliente", manPhoneLabel:"Téléphone", manServiceLabel:"Service", manDateLabel:"Date", manTimeLabel:"Heure",
@@ -535,9 +572,12 @@ const BUSINESS_HOURS = {
   5: { open:'10:00', close:'18:00' },
   6: { open:'09:00', close:'20:00' },
 };
+function getBusinessHoursForDate(dateStr){
+  if(!dateStr) return null;
+  return BUSINESS_HOURS[new Date(dateStr + 'T00:00').getDay()];
+}
 function getTimeSlotsForDate(dateStr){
-  if(!dateStr) return [];
-  const hours = BUSINESS_HOURS[new Date(dateStr + 'T00:00').getDay()];
+  const hours = getBusinessHoursForDate(dateStr);
   if(!hours) return [];
   const slots = [];
   let [h, m] = hours.open.split(':').map(Number);
@@ -556,8 +596,41 @@ function formatSlotTime(hhmm, lang){
   let h12 = h % 12; if(h12 === 0) h12 = 12;
   return `${h12}:${String(m).padStart(2,'0')} ${h < 12 ? 'AM' : 'PM'}`;
 }
+function timeToMinutes(hhmm){
+  const [h, m] = hhmm.split(':').map(Number);
+  return h * 60 + m;
+}
 function slotToDate(dateStr, timeStr){
   return new Date(`${dateStr}T${timeStr}:00`);
+}
+
+/* ===================== TWO-WORKER SCHEDULING ===================== */
+/* We have 2 workers, so up to 2 appointments can run at the same time — but each
+   appointment occupies its worker for its FULL duration, not just its start slot. */
+const WORKER_COUNT = 2;
+async function getOccupiedByWorker(date){
+  const [bookings, blocked] = await Promise.all([Bookings.all(), Blocked.all()]);
+  const byWorker = {};
+  for(let w = 1; w <= WORKER_COUNT; w++) byWorker[w] = [];
+  const assign = (list, type) => {
+    list.filter(b => b.date === date && b.status !== 'cancelled').forEach(b => {
+      const start = timeToMinutes(b.time);
+      const dur = b.duration || 30;
+      const w = (b.worker >= 1 && b.worker <= WORKER_COUNT) ? b.worker : 1;
+      byWorker[w].push({ start, end: start + dur, type, ref: b });
+    });
+  };
+  assign(bookings, 'booking');
+  assign(blocked, 'blocked');
+  return byWorker;
+}
+/* Returns the first worker (1..N) with no overlap in [startMin,endMin), or 0 if none free. */
+function findFreeWorker(byWorker, startMin, endMin){
+  for(let w = 1; w <= WORKER_COUNT; w++){
+    const busy = byWorker[w].some(iv => startMin < iv.end && endMin > iv.start);
+    if(!busy) return w;
+  }
+  return 0;
 }
 function isPastSlot(dateStr, timeStr){
   return slotToDate(dateStr, timeStr).getTime() <= Date.now();

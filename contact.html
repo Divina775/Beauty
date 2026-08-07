@@ -172,7 +172,7 @@ document.getElementById('checkApptBtnInline').addEventListener('click', openModa
 document.getElementById('modalClose').addEventListener('click', closeModal);
 modalOverlay.addEventListener('click', (e)=>{ if(e.target === modalOverlay) closeModal(); });
 
-document.getElementById('lookupBtn').addEventListener('click', async ()=>{
+async function runAppointmentLookup(){
   const t = I18N[lang];
   const email = document.getElementById('lookupEmail').value.trim().toLowerCase();
   const resultEl = document.getElementById('modalResult');
@@ -194,14 +194,33 @@ document.getElementById('lookupBtn').addEventListener('click', async ()=>{
     `;
   } else {
     resultEl.innerHTML = `<p style="margin-bottom:10px;">${t.lookupResultFor(matches.length)}</p>` +
-      matches.map(b => `
-        <div class="booking">
-          <div class="bk-date">${b.dateStr || b.date} · ${formatSlotTime(b.time, lang)}</div>
+      matches.map(b => {
+        const cancelled = b.status === 'cancelled';
+        return `
+        <div class="booking"${cancelled ? ' style="opacity:.6;"' : ''}>
+          <div class="bk-date"${cancelled ? ' style="text-decoration:line-through;"' : ''}>${b.dateStr || b.date} · ${formatSlotTime(b.time, lang)} ${cancelled ? `<span class="cancelled-tag">(${t.cancelledLabel})</span>` : ''}</div>
           <div class="bk-services">${b.services.join(', ')}</div>
+          ${!cancelled ? `<div class="bk-accept"><button class="cancel-btn" data-cancel-id="${b.id}">${t.cancelBookingBtn}</button></div>` : ''}
         </div>
-      `).join('');
+      `;
+      }).join('');
+
+    resultEl.querySelectorAll('.cancel-btn').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        if(!confirm(t.clientCancelConfirm)) return;
+        const reason = (prompt(t.clientCancelReasonPrompt) || '').trim() || '(not provided)';
+        const bookingId = btn.dataset.cancelId;
+        const b = matches.find(m=>m.id===bookingId);
+        await Bookings.update(bookingId, {
+          status: 'cancelled', cancelledBy: b ? b.name : '', cancelReason: reason,
+          cancelledBySource: 'client', cancelledAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+        runAppointmentLookup();
+      });
+    });
   }
-});
+}
+document.getElementById('lookupBtn').addEventListener('click', runAppointmentLookup);
 </script>
 
 </body>

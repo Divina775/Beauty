@@ -197,12 +197,13 @@ function buildManServiceOptions(){
   return `<option value="" disabled selected>${t.manServicePlaceholder}</option>` + groups;
 }
 
-async function getTakenTimesForDate(date){
-  const [bookings, blocked] = await Promise.all([Bookings.all(), Blocked.all()]);
-  const taken = new Set();
-  bookings.filter(b=>b.date===date).forEach(b=> taken.add(b.time));
-  blocked.filter(b=>b.date===date).forEach(b=> taken.add(b.time));
-  return taken;
+function getManSelectedDuration(){
+  const val = document.getElementById('manService').value;
+  if(!val) return 30;
+  const [svcId, optIdx] = val.split('|');
+  const svc = SERVICES.find(s=>s.id===svcId);
+  const opt = svc && svc.options[parseInt(optIdx,10)];
+  return opt ? opt.duration : 30;
 }
 
 let manTimeRequestId = 0;
@@ -222,18 +223,27 @@ async function refreshManTimeOptions(){
     return;
   }
 
+  const duration = getManSelectedDuration();
+  const closeMin = timeToMinutes(getBusinessHoursForDate(date).close);
+
   const requestId = ++manTimeRequestId;
-  const taken = await getTakenTimesForDate(date);
+  const byWorker = await getOccupiedByWorker(date);
   if(requestId !== manTimeRequestId) return; // a newer date was picked while this was loading
+
+  const isBookable = (tm) => {
+    const startMin = timeToMinutes(tm);
+    if(startMin + duration > closeMin) return false;
+    if(isPastSlot(date, tm)) return false;
+    return findFreeWorker(byWorker, startMin, startMin + duration) > 0;
+  };
 
   manTimeSel.innerHTML = daySlots.map(tm=>{
     const past = isPastSlot(date, tm);
-    const bookedOrBlocked = taken.has(tm);
-    const disabled = past || bookedOrBlocked;
-    const suffix = past ? ` ${t.manTimePastSuffix}` : (bookedOrBlocked ? ` ${t.manTimeTakenSuffix}` : '');
-    return `<option value="${tm}" ${disabled?'disabled':''}>${formatSlotTime(tm, lang)}${suffix}</option>`;
+    const bookable = isBookable(tm);
+    const suffix = past ? ` ${t.manTimePastSuffix}` : (!bookable ? ` ${t.manTimeTakenSuffix}` : '');
+    return `<option value="${tm}" ${!bookable?'disabled':''}>${formatSlotTime(tm, lang)}${suffix}</option>`;
   }).join('');
-  if(prevValue && !taken.has(prevValue) && !isPastSlot(date, prevValue)) manTimeSel.value = prevValue;
+  if(prevValue && isBookable(prevValue)) manTimeSel.value = prevValue;
 }
 
 function initStaffPanel(){
@@ -252,6 +262,7 @@ function initStaffPanel(){
   });
 
   document.getElementById('manDate').addEventListener('change', refreshManTimeOptions);
+  document.getElementById('manService').addEventListener('change', refreshManTimeOptions);
 
   document.getElementById('manSubmit').addEventListener('click', async ()=>{
     const manSubmitBtn = document.getElementById('manSubmit');
@@ -262,6 +273,12 @@ function initStaffPanel(){
     const time = document.getElementById('manTime').value;
     if(!name || !serviceVal || !date || !time){ alert(t.manFillRequired); return; }
 
+    const [svcId, optIdx] = serviceVal.split('|');
+    const svc = SERVICES.find(s=>s.id===svcId);
+    const opt = svc.options[parseInt(optIdx,10)];
+    const serviceLabel = opt.label ? `${svc.name[lang]} — ${opt.label[lang]}` : svc.name[lang];
+    const duration = opt.duration;
+
     manSubmitBtn.disabled = true;
 
     if(isPastSlot(date, time)){
@@ -270,22 +287,29 @@ function initStaffPanel(){
       await refreshManTimeOptions();
       return;
     }
-    // re-check right before writing, in case the slot was taken since the dropdown last loaded
-    const taken = await getTakenTimesForDate(date);
-    if(taken.has(time)){
+
+    const startMin = timeToMinutes(time);
+    const endMin = startMin + duration;
+    const hours = getBusinessHoursForDate(date);
+    if(!hours || endMin > timeToMinutes(hours.close)){
       alert(t.slotConflict);
       manSubmitBtn.disabled = false;
       await refreshManTimeOptions();
       return;
     }
 
-    const [svcId, optIdx] = serviceVal.split('|');
-    const svc = SERVICES.find(s=>s.id===svcId);
-    const opt = svc.options[parseInt(optIdx,10)];
-    const serviceLabel = opt.label ? `${svc.name[lang]} — ${opt.label[lang]}` : svc.name[lang];
+    // re-check right before writing, in case both workers were taken since the dropdown last loaded
+    const byWorker = await getOccupiedByWorker(date);
+    const assignedWorker = findFreeWorker(byWorker, startMin, endMin);
+    if(!assignedWorker){
+      alert(t.slotConflict);
+      manSubmitBtn.disabled = false;
+      await refreshManTimeOptions();
+      return;
+    }
 
     const dateStr = new Date(date+'T00:00').toLocaleDateString(lang==='fr' ? 'fr-CA' : 'en-US', {weekday:'long',month:'long',day:'numeric'});
-    await Bookings.add({ name, phone, email:'', date, dateStr, time, services:[serviceLabel], source:'staff' });
+    await Bookings.add({ name, phone, email:'', date, dateStr, time, duration, worker: assignedWorker, services:[serviceLabel], source:'staff' });
     manSubmitBtn.disabled = false;
 
     document.getElementById('manName').value = '';
@@ -305,64 +329,109 @@ async function renderDaySlots(){
   const requestId = ++daySlotsRequestId;
   grid.innerHTML = `<p class="ticket-note" style="text-align:left; margin:16px 0 0;">${t.loadingSlots}</p>`;
 
-  const [bookings, blocked] = await Promise.all([Bookings.all(), Blocked.all()]);
-  if(requestId !== daySlotsRequestId) return; // a newer date was picked while this was loading
-
-  const dayBookings = bookings.filter(b=>b.date===staffSelectedDate);
-  const dayBlocked = blocked.filter(b=>b.date===staffSelectedDate);
   const daySlots = getTimeSlotsForDate(staffSelectedDate);
-
   if(daySlots.length === 0){
     grid.innerHTML = `<p class="ticket-note" style="text-align:left; margin:16px 0 0;">${t.closedThisDay}</p>`;
-  } else {
-    grid.innerHTML = daySlots.map(tm=>{
-      const booking = dayBookings.find(b=>b.time===tm);
-      const block = dayBlocked.find(b=>b.time===tm);
-      let cls = 'open', sub = t.slotAvailable, title = '';
-      if(booking){
-        cls = 'booked'; sub = booking.name || t.slotBooked;
-        title = (booking.services||[]).join(', ');
+    document.getElementById('dayBookingsWrap').style.display = 'none';
+    document.getElementById('dayBookingsList').innerHTML = '';
+    return;
+  }
+
+  const byWorker = await getOccupiedByWorker(staffSelectedDate);
+  if(requestId !== daySlotsRequestId) return; // a newer date was picked while this was loading
+
+  grid.innerHTML = daySlots.map(tm=>{
+    const startMin = timeToMinutes(tm);
+    const rows = [1,2].map(w=>{
+      const covering = byWorker[w].find(iv => startMin >= iv.start && startMin < iv.end);
+      let cls = 'open', status = t.slotAvailable, bookingId = '', blockId = '', title = '';
+      if(covering){
+        if(covering.type === 'booking'){
+          cls = 'booked';
+          status = (covering.ref.name || t.slotBooked) + (covering.ref.acceptedBy ? ' ✓' : '');
+          bookingId = covering.ref.id;
+          title = (covering.ref.services||[]).join(', ');
+        } else {
+          cls = 'blocked';
+          status = t.slotBlocked + (covering.ref.lockedBy ? ` — ${covering.ref.lockedBy}` : '');
+          blockId = covering.ref.id;
+        }
       }
-      else if(block){ cls = 'blocked'; sub = t.slotBlocked; }
-      return `<div class="day-slot ${cls}" data-time="${tm}" data-booking-id="${booking ? booking.id : ''}" data-block-id="${block ? block.id : ''}" title="${title}">
-        <span class="t">${formatSlotTime(tm, lang)}</span><span class="s">${sub}</span>
+      return `<div class="worker-row ${cls}" data-time="${tm}" data-worker="${w}" data-booking-id="${bookingId}" data-block-id="${blockId}" title="${title}">
+        <span class="w-label">${t.workerLabel(w)}</span><span class="w-status">${status}</span>
       </div>`;
     }).join('');
+    return `<div class="day-slot"><div class="day-slot-time">${formatSlotTime(tm, lang)}</div>${rows}</div>`;
+  }).join('');
 
-    grid.querySelectorAll('.day-slot').forEach(el=>{
-      el.addEventListener('click', ()=> onDaySlotClick(el));
-    });
-  }
+  grid.querySelectorAll('.worker-row').forEach(el=>{
+    el.addEventListener('click', ()=> onWorkerRowClick(el));
+  });
 
   const listWrap = document.getElementById('dayBookingsWrap');
   const listEl = document.getElementById('dayBookingsList');
+  const dayBookings = [...byWorker[1], ...byWorker[2]].filter(iv=>iv.type==='booking').map(iv=>iv.ref);
   const sortedBookings = dayBookings.slice().sort((a,b)=> a.time.localeCompare(b.time));
-  if(sortedBookings.length === 0){
+
+  const allBookings = await Bookings.all();
+  const cancelledToday = allBookings
+    .filter(b => b.date === staffSelectedDate && b.status === 'cancelled')
+    .sort((a,b)=> a.time.localeCompare(b.time));
+
+  if(sortedBookings.length === 0 && cancelledToday.length === 0){
     listWrap.style.display = 'none';
     listEl.innerHTML = '';
   } else {
     listWrap.style.display = 'block';
     listEl.innerHTML = sortedBookings.map(b => `
       <div class="booking">
-        <div class="bk-date">${formatSlotTime(b.time, lang)} — ${b.name}</div>
+        <div class="bk-date">${formatSlotTime(b.time, lang)} — ${b.name} <span style="color:var(--text-muted); font-weight:400;">(${t.workerLabel(b.worker||1)})</span></div>
         <div class="bk-services">${(b.services||[]).join(', ')}${b.phone ? ' · ' + b.phone : ''}</div>
+        <div class="bk-accept">${
+          b.acceptedBy
+            ? `<span class="accepted-tag">${t.acceptedByPrefix} ${b.acceptedBy}</span>`
+            : `<button class="accept-btn" data-booking-id="${b.id}">${t.acceptBookingBtn}</button>`
+        }</div>
+      </div>
+    `).join('') + cancelledToday.map(b => `
+      <div class="booking" style="opacity:.6;">
+        <div class="bk-date" style="text-decoration:line-through;">${formatSlotTime(b.time, lang)} — ${b.name}</div>
+        <div class="bk-services">${(b.services||[]).join(', ')}</div>
+        <div class="bk-accept"><span class="cancelled-tag">${t.cancelledLabel}${b.cancelledBy ? ' — ' + b.cancelledBy : ''}${b.cancelReason ? ': ' + b.cancelReason : ''}</span></div>
       </div>
     `).join('');
+    listEl.querySelectorAll('.accept-btn').forEach(btn=>{
+      btn.addEventListener('click', async ()=>{
+        const acceptName = (prompt(t.acceptNamePrompt) || '').trim();
+        if(!acceptName) return;
+        await Bookings.update(btn.dataset.bookingId, { acceptedBy: acceptName });
+        renderDaySlots();
+      });
+    });
   }
 }
 
-async function onDaySlotClick(el){
+async function onWorkerRowClick(el){
+  const worker = parseInt(el.dataset.worker, 10);
   if(el.classList.contains('open')){
-    await Blocked.add({ date: staffSelectedDate, time: el.dataset.time });
+    const lockedBy = (prompt(t.lockNamePrompt) || '').trim();
+    if(!lockedBy) return; // cancelled or left blank — don't lock
+    await Blocked.add({ date: staffSelectedDate, time: el.dataset.time, worker, duration: 30, lockedBy });
     renderDaySlots();
   } else if(el.classList.contains('blocked')){
     if(el.dataset.blockId) await Blocked.remove(el.dataset.blockId);
     renderDaySlots();
   } else if(el.classList.contains('booked')){
-    if(el.dataset.bookingId && confirm(t.confirmCancelBooking)){
-      await Bookings.remove(el.dataset.bookingId);
-      renderDaySlots();
-    }
+    if(!el.dataset.bookingId) return;
+    const cancelledBy = (prompt(t.cancelNamePrompt) || '').trim();
+    if(!cancelledBy) return; // cancelled or left blank — don't cancel
+    const cancelReason = (prompt(t.cancelReasonPrompt) || '').trim();
+    if(!cancelReason) return; // cancelled or left blank — don't cancel
+    await Bookings.update(el.dataset.bookingId, {
+      status: 'cancelled', cancelledBy, cancelReason,
+      cancelledBySource: 'staff', cancelledAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    renderDaySlots();
   }
 }
 </script>
