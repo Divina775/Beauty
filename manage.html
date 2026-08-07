@@ -337,8 +337,17 @@ async function renderDaySlots(){
     return;
   }
 
-  const byWorker = await getOccupiedByWorker(staffSelectedDate);
+  let byWorker;
+  try{
+    byWorker = await getOccupiedByWorker(staffSelectedDate);
+  }catch(e){
+    console.error('getOccupiedByWorker failed for', staffSelectedDate, e);
+    grid.innerHTML = `<p class="ticket-note" style="text-align:left; margin:16px 0 0; color:var(--warn);">${t.slotsLoadError}</p>`;
+    return;
+  }
   if(requestId !== daySlotsRequestId) return; // a newer date was picked while this was loading
+
+  try{
 
   grid.innerHTML = daySlots.map(tm=>{
     const startMin = timeToMinutes(tm);
@@ -371,12 +380,12 @@ async function renderDaySlots(){
   const listWrap = document.getElementById('dayBookingsWrap');
   const listEl = document.getElementById('dayBookingsList');
   const dayBookings = [...byWorker[1], ...byWorker[2]].filter(iv=>iv.type==='booking').map(iv=>iv.ref);
-  const sortedBookings = dayBookings.slice().sort((a,b)=> a.time.localeCompare(b.time));
+  const sortedBookings = dayBookings.slice().sort((a,b)=> (a.time||'').localeCompare(b.time||''));
 
   const allBookings = await Bookings.all();
   const cancelledToday = allBookings
     .filter(b => b.date === staffSelectedDate && b.status === 'cancelled')
-    .sort((a,b)=> a.time.localeCompare(b.time));
+    .sort((a,b)=> (a.time||'').localeCompare(b.time||''));
 
   if(sortedBookings.length === 0 && cancelledToday.length === 0){
     listWrap.style.display = 'none';
@@ -408,6 +417,10 @@ async function renderDaySlots(){
         renderDaySlots();
       });
     });
+  }
+  }catch(e){
+    console.error('renderDaySlots failed for', staffSelectedDate, e);
+    grid.innerHTML = `<p class="ticket-note" style="text-align:left; margin:16px 0 0; color:var(--warn);">${t.slotsLoadError}</p>`;
   }
 }
 

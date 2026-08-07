@@ -591,13 +591,20 @@ function getTimeSlotsForDate(dateStr){
 }
 /* Slots are stored/compared as unambiguous 24h "HH:MM"; this is only for display. */
 function formatSlotTime(hhmm, lang){
+  if(typeof hhmm !== 'string') return '—';
   const [h, m] = hhmm.split(':').map(Number);
+  if(Number.isNaN(h) || Number.isNaN(m)) return '—';
   if(lang === 'fr') return `${h}h${String(m).padStart(2,'0')}`;
   let h12 = h % 12; if(h12 === 0) h12 = 12;
   return `${h12}:${String(m).padStart(2,'0')} ${h < 12 ? 'AM' : 'PM'}`;
 }
+/* Booking/blocked records come from Firestore and can be malformed (e.g. an old or
+   hand-edited document missing `time`) — never throw on bad input, since one bad
+   record would otherwise take down the whole day's rendering. */
 function timeToMinutes(hhmm){
+  if(typeof hhmm !== 'string') return NaN;
   const [h, m] = hhmm.split(':').map(Number);
+  if(Number.isNaN(h) || Number.isNaN(m)) return NaN;
   return h * 60 + m;
 }
 function slotToDate(dateStr, timeStr){
@@ -615,6 +622,7 @@ async function getOccupiedByWorker(date){
   const assign = (list, type) => {
     list.filter(b => b.date === date && b.status !== 'cancelled').forEach(b => {
       const start = timeToMinutes(b.time);
+      if(Number.isNaN(start)) return; // malformed record (e.g. missing time) — skip it, don't crash the schedule
       const dur = b.duration || 30;
       const w = (b.worker >= 1 && b.worker <= WORKER_COUNT) ? b.worker : 1;
       byWorker[w].push({ start, end: start + dur, type, ref: b });
