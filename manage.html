@@ -96,6 +96,61 @@
         </div>
 
         <div class="manage-panel">
+          <h3 data-i18n="catalogTitle">Manage Services &amp; Prices</h3>
+          <p class="sub" data-i18n="catalogSub"></p>
+          <div id="catalogList"></div>
+
+          <div id="catalogForm" style="margin-top:24px; padding-top:22px; border-top:1px dashed var(--beige-soft);">
+            <h4 id="catalogFormTitle" data-i18n="catalogAddTitle" style="font-size:1rem; font-weight:500; margin-bottom:16px;">Add a Service</h4>
+            <div class="manual-form">
+              <div class="field full">
+                <label for="catCategory" data-i18n="catalogCategoryLabel">Category</label>
+                <input type="text" id="catCategory" list="catalogCategoryList">
+                <datalist id="catalogCategoryList"></datalist>
+              </div>
+              <div class="field">
+                <label for="catNameEn" data-i18n="catalogNameEnLabel">Name</label>
+                <input type="text" id="catNameEn">
+              </div>
+              <div class="field">
+                <label for="catNameFr" data-i18n="catalogNameFrLabel">Name in French (optional)</label>
+                <input type="text" id="catNameFr">
+              </div>
+              <div class="field">
+                <label for="catDescEn" data-i18n="catalogDescEnLabel">Description (optional)</label>
+                <input type="text" id="catDescEn">
+              </div>
+              <div class="field">
+                <label for="catDescFr" data-i18n="catalogDescFrLabel">Description in French (optional)</label>
+                <input type="text" id="catDescFr">
+              </div>
+              <div class="field full">
+                <label for="catNotesEn" data-i18n="catalogNotesLabel">Notes for clients (optional, one per line)</label>
+                <textarea id="catNotesEn" rows="2"></textarea>
+              </div>
+              <div class="field full">
+                <label for="catImageFile" data-i18n="catalogImageLabel">Photo (optional)</label>
+                <input type="file" id="catImageFile" accept="image/*">
+                <p class="ticket-note" id="catImageStatus" style="text-align:left; margin:8px 0 0; display:none;"></p>
+                <div id="catImagePreviewWrap" style="margin-top:10px; display:none;">
+                  <img id="catImagePreview" style="max-width:180px; max-height:140px; object-fit:cover; border:1px solid var(--line); display:block;">
+                  <button type="button" class="cancel-btn" id="catImageRemove" style="margin-top:8px;" data-i18n="catalogImageRemove">Remove Photo</button>
+                </div>
+              </div>
+            </div>
+
+            <label style="display:block; font-size:.72rem; letter-spacing:.08em; text-transform:uppercase; color:var(--text-muted); margin:18px 0 8px;" data-i18n="catalogOptionsLabel">Lengths / prices</label>
+            <div id="catalogOptionsWrap"></div>
+            <button type="button" class="btn-ghost" id="catAddOption" style="margin-top:10px; padding:10px 18px;" data-i18n="catalogAddOption">+ Add another length/price</button>
+
+            <div style="margin-top:20px; display:flex; gap:10px; flex-wrap:wrap;">
+              <button class="ticket-submit" id="catSave" style="margin-top:0;" data-i18n="catalogSaveBtn">Save Service</button>
+              <button class="btn-ghost" id="catCancelEdit" style="margin-top:0; display:none;" data-i18n="catalogCancelBtn">Cancel Edit</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="manage-panel">
           <h3 data-i18n="referenceCalendarTitle">Studio Google Calendar (reference)</h3>
           <p class="sub" data-i18n="referenceCalendarSub"></p>
           <div style="border:1px solid var(--line); overflow:hidden; margin-top:6px;">
@@ -182,6 +237,135 @@ if(sessionStorage.getItem('dmstyle_staff_ok') === '1'){
   unlockStaff();
 }
 
+/* ---------------- CATALOG MANAGER ---------------- */
+let catEditingId = null;
+let catFormOptions = [{ label:'', duration:30, price:0 }];
+let catFormImage = null;
+
+function showCatImagePreview(dataUrl){
+  const wrap = document.getElementById('catImagePreviewWrap');
+  if(dataUrl){
+    document.getElementById('catImagePreview').src = dataUrl;
+    wrap.style.display = 'block';
+  } else {
+    wrap.style.display = 'none';
+  }
+}
+
+function renderCatalogOptionsForm(){
+  const wrap = document.getElementById('catalogOptionsWrap');
+  wrap.innerHTML = catFormOptions.map((opt, i) => `
+    <div class="cat-option-row">
+      <input type="text" class="cat-opt-label" data-idx="${i}" placeholder="${t.catalogOptLabelPlaceholder}" value="${opt.label || ''}">
+      <input type="number" class="cat-opt-duration" data-idx="${i}" placeholder="${t.catalogOptDurationPlaceholder}" min="15" step="15" value="${opt.duration || ''}">
+      <input type="number" class="cat-opt-price" data-idx="${i}" placeholder="${t.catalogOptPricePlaceholder}" min="0" step="5" value="${opt.price || ''}">
+      <button type="button" class="cat-opt-remove" data-idx="${i}" aria-label="Remove">✕</button>
+    </div>
+  `).join('');
+
+  wrap.querySelectorAll('.cat-opt-label').forEach(inp=> inp.addEventListener('input', e=> { catFormOptions[+e.target.dataset.idx].label = e.target.value; }));
+  wrap.querySelectorAll('.cat-opt-duration').forEach(inp=> inp.addEventListener('input', e=> { catFormOptions[+e.target.dataset.idx].duration = parseInt(e.target.value,10) || 0; }));
+  wrap.querySelectorAll('.cat-opt-price').forEach(inp=> inp.addEventListener('input', e=> { catFormOptions[+e.target.dataset.idx].price = parseFloat(e.target.value) || 0; }));
+  wrap.querySelectorAll('.cat-opt-remove').forEach(btn=> btn.addEventListener('click', ()=>{
+    if(catFormOptions.length <= 1) return; // always keep at least one row
+    catFormOptions.splice(+btn.dataset.idx, 1);
+    renderCatalogOptionsForm();
+  }));
+}
+
+function resetCatalogForm(){
+  catEditingId = null;
+  catFormOptions = [{ label:'', duration:30, price:0 }];
+  catFormImage = null;
+  document.getElementById('catCategory').value = '';
+  document.getElementById('catNameEn').value = '';
+  document.getElementById('catNameFr').value = '';
+  document.getElementById('catDescEn').value = '';
+  document.getElementById('catDescFr').value = '';
+  document.getElementById('catNotesEn').value = '';
+  document.getElementById('catImageFile').value = '';
+  document.getElementById('catImageStatus').style.display = 'none';
+  showCatImagePreview(null);
+  document.getElementById('catalogFormTitle').textContent = t.catalogAddTitle;
+  document.getElementById('catCancelEdit').style.display = 'none';
+  renderCatalogOptionsForm();
+}
+
+function startEditCatalogItem(id){
+  const s = SERVICES.find(x=>x.id===id);
+  if(!s) return;
+  catEditingId = id;
+  catFormOptions = s.options.map(o=>({ label: o.label ? o.label.en : '', duration:o.duration, price:o.price }));
+  catFormImage = s.image || null;
+  document.getElementById('catCategory').value = s.cat.en;
+  document.getElementById('catNameEn').value = s.name.en;
+  document.getElementById('catNameFr').value = (s.name.fr && s.name.fr !== s.name.en) ? s.name.fr : '';
+  document.getElementById('catDescEn').value = s.desc.en || '';
+  document.getElementById('catDescFr').value = (s.desc.fr && s.desc.fr !== s.desc.en) ? s.desc.fr : '';
+  document.getElementById('catNotesEn').value = (s.notes.en || []).join('\n');
+  document.getElementById('catImageFile').value = '';
+  document.getElementById('catImageStatus').style.display = 'none';
+  showCatImagePreview(catFormImage);
+  document.getElementById('catalogFormTitle').textContent = t.catalogEditTitle;
+  document.getElementById('catCancelEdit').style.display = 'inline-block';
+  renderCatalogOptionsForm();
+  document.getElementById('catalogForm').scrollIntoView({behavior:'smooth', block:'start'});
+}
+
+function renderCatalogManager(){
+  const cats = [...new Set(SERVICES.map(s=>s.cat.en))];
+  document.getElementById('catalogCategoryList').innerHTML = cats.map(c=>`<option value="${c}">`).join('');
+
+  const byCat = {};
+  SERVICES.forEach(s=>{
+    if(!byCat[s.cat.en]) byCat[s.cat.en] = [];
+    byCat[s.cat.en].push(s);
+  });
+
+  const listEl = document.getElementById('catalogList');
+  const catKeys = Object.keys(byCat);
+  listEl.innerHTML = catKeys.length ? catKeys.map(cat => `
+    <div class="cat-group">
+      <div class="cat-group-title">${cat}</div>
+      ${byCat[cat].map(s => `
+        <div class="cat-item">
+          <div class="cat-item-info" style="display:flex; gap:12px; align-items:flex-start;">
+            ${s.image ? `<img src="${s.image}" class="cat-item-thumb" alt="">` : ''}
+            <div>
+              <div class="cat-item-name">${s.name.en}</div>
+              <div class="cat-item-options">${s.options.map(o=> `${o.label ? o.label.en + ' — ' : ''}$${o.price} · ${formatDuration(o.duration, lang)}`).join('&nbsp;&nbsp;&nbsp;')}</div>
+            </div>
+          </div>
+          <div class="cat-item-actions">
+            <button class="accept-btn" data-edit-id="${s.id}">${t.catalogEditBtn}</button>
+            <button class="cancel-btn" data-delete-id="${s.id}">${t.catalogDeleteBtn}</button>
+          </div>
+        </div>
+      `).join('')}
+    </div>
+  `).join('') : `<p class="ticket-note" style="text-align:left; margin:0 0 16px;">${t.catalogEmpty}</p>`;
+
+  listEl.querySelectorAll('[data-edit-id]').forEach(btn=>{
+    btn.addEventListener('click', ()=> startEditCatalogItem(btn.dataset.editId));
+  });
+  listEl.querySelectorAll('[data-delete-id]').forEach(btn=>{
+    btn.addEventListener('click', async ()=>{
+      if(!confirm(t.catalogDeleteConfirm)) return;
+      try{
+        await Catalog.remove(btn.dataset.deleteId);
+        await loadCatalog();
+        renderCatalogManager();
+        document.getElementById('manService').innerHTML = buildManServiceOptions();
+      }catch(e){
+        console.error('Catalog.remove() failed:', e);
+        alert(t.catalogSaveError);
+      }
+    });
+  });
+
+  resetCatalogForm();
+}
+
 /* ---------------- STAFF PANEL ---------------- */
 function buildManServiceOptions(){
   const groups = categories(lang).map(cat=>{
@@ -246,9 +430,12 @@ async function refreshManTimeOptions(){
   if(prevValue && isBookable(prevValue)) manTimeSel.value = prevValue;
 }
 
-function initStaffPanel(){
+async function initStaffPanel(){
   if(staffPanelReady) return;
   staffPanelReady = true;
+
+  await loadCatalog();
+  renderCatalogManager();
 
   const today = new Date().toISOString().split('T')[0];
   document.getElementById('staffDate').min = today;
@@ -263,6 +450,90 @@ function initStaffPanel(){
 
   document.getElementById('manDate').addEventListener('change', refreshManTimeOptions);
   document.getElementById('manService').addEventListener('change', refreshManTimeOptions);
+
+  document.getElementById('catAddOption').addEventListener('click', ()=>{
+    catFormOptions.push({ label:'', duration:30, price:0 });
+    renderCatalogOptionsForm();
+  });
+  document.getElementById('catCancelEdit').addEventListener('click', resetCatalogForm);
+
+  document.getElementById('catImageFile').addEventListener('change', async (e)=>{
+    const file = e.target.files[0];
+    if(!file) return;
+    const statusEl = document.getElementById('catImageStatus');
+    statusEl.style.display = 'block';
+    statusEl.textContent = t.catalogImageProcessing;
+    try{
+      let dataUrl = await compressImageFile(file, 640, 0.7);
+      if(dataUrl.length > MAX_IMAGE_DATA_LENGTH){
+        dataUrl = await compressImageFile(file, 480, 0.55); // still too big — compress harder once
+      }
+      if(dataUrl.length > MAX_IMAGE_DATA_LENGTH){
+        statusEl.textContent = t.catalogImageTooBig;
+        e.target.value = '';
+        return;
+      }
+      catFormImage = dataUrl;
+      showCatImagePreview(dataUrl);
+      statusEl.style.display = 'none';
+    }catch(err){
+      console.error('compressImageFile failed:', err);
+      statusEl.textContent = t.catalogImageTooBig;
+      e.target.value = '';
+    }
+  });
+  document.getElementById('catImageRemove').addEventListener('click', ()=>{
+    catFormImage = null;
+    document.getElementById('catImageFile').value = '';
+    document.getElementById('catImageStatus').style.display = 'none';
+    showCatImagePreview(null);
+  });
+  document.getElementById('catSave').addEventListener('click', async ()=>{
+    const catEn = document.getElementById('catCategory').value.trim();
+    const nameEn = document.getElementById('catNameEn').value.trim();
+    if(!catEn || !nameEn){ alert(t.catalogFillRequired); return; }
+    const nameFr = document.getElementById('catNameFr').value.trim() || nameEn;
+    const descEn = document.getElementById('catDescEn').value.trim();
+    const descFr = document.getElementById('catDescFr').value.trim() || descEn;
+    const notesEn = document.getElementById('catNotesEn').value.split('\n').map(x=>x.trim()).filter(Boolean);
+
+    const options = catFormOptions
+      .filter(o => o.duration > 0 && o.price >= 0)
+      .map(o => ({
+        label: o.label.trim() ? { en:o.label.trim(), fr:o.label.trim() } : null,
+        duration: o.duration,
+        price: o.price
+      }));
+    if(options.length === 0){ alert(t.catalogFillRequired); return; }
+
+    const payload = {
+      cat: { en:catEn, fr:catEn },
+      name: { en:nameEn, fr:nameFr },
+      desc: { en:descEn, fr:descFr },
+      notes: { en:notesEn, fr:notesEn },
+      options,
+      image: catFormImage
+    };
+
+    const saveBtn = document.getElementById('catSave');
+    saveBtn.disabled = true;
+    try{
+      if(catEditingId){
+        await Catalog.update(catEditingId, payload);
+      } else {
+        await Catalog.add(payload);
+      }
+      await loadCatalog();
+      renderCatalogManager();
+      document.getElementById('manService').innerHTML = buildManServiceOptions();
+      alert(t.catalogSaved);
+    }catch(e){
+      console.error('Catalog save failed:', e);
+      alert(t.catalogSaveError);
+    }finally{
+      saveBtn.disabled = false;
+    }
+  });
 
   document.getElementById('manSubmit').addEventListener('click', async ()=>{
     const manSubmitBtn = document.getElementById('manSubmit');

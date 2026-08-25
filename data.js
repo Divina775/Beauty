@@ -236,6 +236,22 @@ const I18N = {
     manSubmit:"Add Booking", manFillRequired:"Please fill in the client name, service, date, and time.", manSuccess:"Booking added.",
     slotConflict:"That time was just taken by another booking — please pick a different time.",
     pastTimeError:"That time has already passed — please pick another.",
+    catalogTitle:"Manage Services & Prices", catalogSub:"Add, edit, or remove hairstyles and prices — changes appear on the booking page right away.",
+    catalogEmpty:"No services yet — add your first one below.",
+    catalogAddTitle:"Add a Service", catalogEditTitle:"Edit Service",
+    catalogCategoryLabel:"Category", catalogNameEnLabel:"Name", catalogNameFrLabel:"Name in French (optional)",
+    catalogDescEnLabel:"Description (optional)", catalogDescFrLabel:"Description in French (optional)",
+    catalogNotesLabel:"Notes for clients (optional, one per line)",
+    catalogOptionsLabel:"Lengths / prices", catalogAddOption:"+ Add another length/price",
+    catalogOptLabelPlaceholder:"Length/variant (leave blank if only one price)",
+    catalogOptDurationPlaceholder:"Duration (minutes)", catalogOptPricePlaceholder:"Price ($)",
+    catalogSaveBtn:"Save Service", catalogCancelBtn:"Cancel Edit", catalogSaved:"Saved.",
+    catalogEditBtn:"Edit", catalogDeleteBtn:"Delete", catalogDeleteConfirm:"Delete this service? This can't be undone.",
+    catalogFillRequired:"Please fill in the category, name, and at least one length with a duration and price.",
+    catalogSaveError:"Something went wrong saving that — check your connection and try again.",
+    catalogImageLabel:"Photo (optional)", catalogImageRemove:"Remove Photo",
+    catalogImageProcessing:"Processing image…",
+    catalogImageTooBig:"That image couldn't be processed or is still too large — try a different photo.",
     referenceCalendarTitle:"Studio Google Calendar (reference)", referenceCalendarSub:"Your personal Google Calendar, kept here for reference. It is not linked to the availability grid above.",
     openInGoogle:"Open in Google Calendar",
     firebaseNotConfigured:"Shared online storage isn't set up yet, so bookings and blocked slots below are only saved on this device/browser, not shared with clients or other staff devices. Paste your Firebase config into data.js to turn on live, shared syncing everywhere.",
@@ -313,6 +329,22 @@ const I18N = {
     manSubmit:"Ajouter le rendez-vous", manFillRequired:"Veuillez remplir le nom, le service, la date et l'heure.", manSuccess:"Rendez-vous ajouté.",
     slotConflict:"Ce créneau vient d'être pris par une autre réservation — veuillez en choisir un autre.",
     pastTimeError:"Ce moment est déjà passé — veuillez en choisir un autre.",
+    catalogTitle:"Gérer les services et les prix", catalogSub:"Ajoutez, modifiez ou supprimez des coiffures et des prix — les changements apparaissent immédiatement sur la page de réservation.",
+    catalogEmpty:"Aucun service pour l'instant — ajoutez le premier ci-dessous.",
+    catalogAddTitle:"Ajouter un service", catalogEditTitle:"Modifier le service",
+    catalogCategoryLabel:"Catégorie", catalogNameEnLabel:"Nom", catalogNameFrLabel:"Nom en français (facultatif)",
+    catalogDescEnLabel:"Description (facultatif)", catalogDescFrLabel:"Description en français (facultatif)",
+    catalogNotesLabel:"Notes pour les clientes (facultatif, une par ligne)",
+    catalogOptionsLabel:"Longueurs / prix", catalogAddOption:"+ Ajouter une autre longueur/prix",
+    catalogOptLabelPlaceholder:"Longueur/variante (laisser vide s'il n'y a qu'un seul prix)",
+    catalogOptDurationPlaceholder:"Durée (minutes)", catalogOptPricePlaceholder:"Prix ($)",
+    catalogSaveBtn:"Enregistrer le service", catalogCancelBtn:"Annuler la modification", catalogSaved:"Enregistré.",
+    catalogEditBtn:"Modifier", catalogDeleteBtn:"Supprimer", catalogDeleteConfirm:"Supprimer ce service? Cette action est irréversible.",
+    catalogFillRequired:"Veuillez remplir la catégorie, le nom, et au moins une longueur avec une durée et un prix.",
+    catalogSaveError:"Une erreur s'est produite lors de l'enregistrement — vérifiez votre connexion et réessayez.",
+    catalogImageLabel:"Photo (facultatif)", catalogImageRemove:"Supprimer la photo",
+    catalogImageProcessing:"Traitement de l'image…",
+    catalogImageTooBig:"Cette image n'a pas pu être traitée ou est encore trop grande — essayez une autre photo.",
     referenceCalendarTitle:"Google Agenda du studio (référence)", referenceCalendarSub:"Votre Google Agenda personnel, conservé ici à titre de référence. Il n'est pas lié à la grille de disponibilité ci-dessus.",
     openInGoogle:"Ouvrir dans Google Agenda",
     firebaseNotConfigured:"Le stockage partagé en ligne n'est pas encore configuré, donc les rendez-vous et créneaux bloqués ci-dessous ne sont enregistrés que sur cet appareil/navigateur, pas partagés avec les clientes ou les autres appareils du personnel. Collez votre configuration Firebase dans data.js pour activer la synchronisation partagée en direct partout.",
@@ -340,7 +372,10 @@ const NOTE_PICKDROP = {
   fr:["Les clientes dont les cheveux dépassent le menton auront des frais additionnels de 20$+, car les cheveux plus longs demandent plus de temps et de travail.","Assurez-vous de laver et sécher vos cheveux au séchoir, sinon des frais s'appliqueront.","Les cheveux ne doivent avoir aucun produit (huiles, etc.)","Les extensions ne sont pas incluses dans le prix."]
 };
 
-const SERVICES = [
+/* This is the one-time seed used to populate Firestore the first time the catalog
+   loads with nothing in it. After that, Firestore is the source of truth — edited
+   live from the Staff page's "Manage Services" panel — and this array is unused. */
+const SERVICES_SEED = [
   /* ---- French Curl ---- */
   { id:'fc1', cat:{en:'French Curl',fr:'French Curl'}, name:{en:'Medium Knotless French Curls Braids',fr:'Tresses Knotless French Curls (Moyennes)'}, desc:{en:'',fr:''}, notes:NOTE_STD,
     options:[
@@ -550,6 +585,91 @@ const SERVICES = [
   { id:'fl1', cat:{en:'Faux Locs',fr:'Faux Locs'}, name:{en:'Dread Locks Touch Up',fr:'Retouche de locks'}, desc:{en:'',fr:''}, notes:NOTE_NOEXT, options:[{label:null, duration:150, price:120}] },
 ];
 
+/* ===================== IMAGE COMPRESSION (for service photos, stored inline in Firestore) =====================
+   No Firebase Storage involved — that now requires the paid Blaze plan. Instead, images
+   are resized down and re-encoded as JPEG right in the browser, then stored as a small
+   base64 string directly on the service document. Keeps everything on the free plan. */
+const MAX_IMAGE_DATA_LENGTH = 700000; // ~700KB as a base64 string, safely under Firestore's 1MB doc limit
+function compressImageFile(file, maxWidth = 640, quality = 0.7){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('Could not read that file.'));
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onerror = () => reject(new Error('That file doesn\'t look like a valid image.'));
+      img.onload = () => {
+        const scale = Math.min(1, maxWidth / img.width);
+        const canvas = document.createElement('canvas');
+        canvas.width = Math.round(img.width * scale);
+        canvas.height = Math.round(img.height * scale);
+        const ctx = canvas.getContext('2d');
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        resolve(canvas.toDataURL('image/jpeg', quality));
+      };
+      img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
+/* ===================== CATALOG (services + prices, editable live from the Staff page) =====================
+   Firestore is the source of truth once seeded. Without Firebase configured, this falls
+   back to the static SERVICES_SEED list above so the site still works during setup. */
+const Catalog = {
+  async all(){
+    if(!db) return SERVICES_SEED;
+    try{
+      const snap = await db.collection('services').orderBy('createdAt').get();
+      return snap.docs.map(d => ({ id:d.id, ...d.data() }));
+    }catch(e){
+      console.error('Catalog.all() failed:', e);
+      return SERVICES_SEED;
+    }
+  },
+  async add(service){
+    if(!db) return null;
+    const ref = await db.collection('services').add({ ...service, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+    return ref.id;
+  },
+  async update(id, partial){
+    if(!db) return;
+    await db.collection('services').doc(id).update(partial);
+  },
+  async remove(id){
+    if(!db) return;
+    await db.collection('services').doc(id).delete();
+  },
+  /* Runs once: if the `services` collection is empty (brand-new project, or Firebase
+     was just connected), populate it from SERVICES_SEED so the site has something to
+     show immediately. Safe to call on every load — it no-ops once anything exists. */
+  async ensureSeeded(){
+    if(!db) return;
+    try{
+      const snap = await db.collection('services').limit(1).get();
+      if(!snap.empty) return;
+      const batch = db.batch();
+      SERVICES_SEED.forEach(s=>{
+        const { id, ...rest } = s; // Firestore assigns its own id
+        const ref = db.collection('services').doc();
+        batch.set(ref, { ...rest, createdAt: firebase.firestore.FieldValue.serverTimestamp() });
+      });
+      await batch.commit();
+    }catch(e){
+      console.error('Catalog.ensureSeeded() failed:', e);
+    }
+  }
+};
+
+/* Populated at runtime — every page that shows or manages services must call this once
+   (await loadCatalog()) before relying on SERVICES. Starts as the static seed so nothing
+   is ever empty while the real fetch is in flight. */
+let SERVICES = SERVICES_SEED;
+async function loadCatalog(){
+  await Catalog.ensureSeeded();
+  const list = await Catalog.all();
+  if(list.length) SERVICES = list;
+  return SERVICES;
+}
 
 function categories(lang){ return [...new Set(SERVICES.map(s => s.cat[lang]))]; }
 

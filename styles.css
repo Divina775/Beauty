@@ -185,6 +185,7 @@ section{padding:100px 0;}
 .service-group h3{font-size:1.3rem; font-weight:400; margin-bottom:4px; color:var(--beige);}
 .service-group .group-sub{color:var(--text-muted); font-size:.85rem; margin-bottom:20px;}
 .service-card{ padding:24px 0; border-bottom:1px solid var(--line); }
+.service-card-img{ width:100%; max-width:320px; height:160px; object-fit:cover; border:1px solid var(--line); margin-bottom:14px; display:block; }
 .service-info h4{font-size:1.05rem; font-weight:500; margin-bottom:6px;}
 .service-info p.desc{color:var(--text-muted); font-size:.86rem; max-width:460px;}
 .service-notes{list-style:none; margin-top:10px; display:flex; flex-direction:column; gap:4px;}
@@ -400,3 +401,26 @@ footer .fine{color:var(--text-muted); font-size:.78rem;}
 .manual-form .field{margin-bottom:0;}
 .manual-form .full{grid-column:1 / -1;}
 @media (max-width:640px){ .manual-form{grid-template-columns:1fr;} }
+textarea{min-height:70px; resize:vertical;}
+
+/* ---------- CATALOG MANAGER (manage services & prices) ---------- */
+.cat-group{margin-bottom:22px;}
+.cat-group-title{font-size:.78rem; letter-spacing:.06em; text-transform:uppercase; color:var(--beige); margin-bottom:10px;}
+.cat-item{
+  display:flex; justify-content:space-between; align-items:flex-start; gap:14px;
+  padding:14px 0; border-bottom:1px solid var(--line); flex-wrap:wrap;
+}
+.cat-item-thumb{ width:56px; height:56px; object-fit:cover; border:1px solid var(--line); flex-shrink:0; }
+.cat-item-name{font-weight:500; font-size:.94rem;}
+.cat-item-options{color:var(--text-muted); font-size:.8rem; margin-top:4px;}
+.cat-item-actions{display:flex; gap:8px; flex-shrink:0;}
+.cat-option-row{
+  display:grid; grid-template-columns:1fr 130px 110px 32px; gap:10px; align-items:center; margin-bottom:10px;
+}
+.cat-option-row input{margin-bottom:0;}
+.cat-opt-remove{
+  background:none; border:1px solid var(--line); color:var(--text-muted); width:32px; height:38px;
+  cursor:pointer; transition:.2s ease; flex-shrink:0;
+}
+.cat-opt-remove:hover{border-color:var(--warn); color:var(--warn);}
+@media (max-width:640px){ .cat-option-row{grid-template-columns:1fr; } }

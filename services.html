@@ -239,11 +239,14 @@ function renderServiceCard(s){
   const notesHtml = notes.length ? `<ul class="service-notes">${notes.map(n=>`<li>${n}</li>`).join('')}</ul>` : '';
   const descHtml = s.desc[lang] ? `<p class="desc">${s.desc[lang]}</p>` : '';
 
+  const imgHtml = s.image ? `<img src="${s.image}" class="service-card-img" alt="">` : '';
+
   if(single){
     const opt = s.options[0];
     return `
       <div class="service-card">
         <div class="service-info">
+          ${imgHtml}
           <h4>${s.name[lang]}</h4>
           ${descHtml}
           ${notesHtml}
@@ -264,6 +267,7 @@ function renderServiceCard(s){
   return `
     <div class="service-card">
       <div class="service-info">
+        ${imgHtml}
         <h4>${s.name[lang]}</h4>
         ${descHtml}
         ${notesHtml}
@@ -621,11 +625,15 @@ drawerBackdrop.addEventListener('click', ()=> window.toggleCartDrawer(false));
 /* ---------------- INIT ---------------- */
 document.getElementById('apptDate').min = new Date().toISOString().split('T')[0];
 if(savedCart.date) document.getElementById('apptDate').value = savedCart.date;
-renderTabs();
-renderServices();
-renderTicket();
-renderSlotsForDate(savedCart.date || '');
-if(window.location.hash === '#book') window.toggleCartDrawer(true);
+document.getElementById('serviceGroups').innerHTML = `<p class="ticket-note" style="text-align:left;">${I18N[lang].loadingSlots}</p>`;
+(async ()=>{
+  await loadCatalog();
+  renderTabs();
+  renderServices();
+  renderTicket();
+  renderSlotsForDate(savedCart.date || '');
+  if(window.location.hash === '#book') window.toggleCartDrawer(true);
+})();
 </script>
 
 </body>
