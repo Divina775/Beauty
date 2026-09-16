@@ -151,7 +151,7 @@ const Blocked = {
 /* ===================== CONTACT ===================== */
 const PHONE_TEL = '+16132423352';
 const WHATSAPP_NUMBER = '16132423352';
-const STUDIO_EMAIL = 'divinamiguelkanda@gmail.com';
+const STUDIO_EMAIL = 'dmstylestudio01@gmail.com';
 const INSTAGRAM_URL = 'https://www.instagram.com/dmstyle02?igsh=ZDl4MnZ1aWszNXR3&utm_source=qr';
 const TIKTOK_URL = 'https://www.tiktok.com/@dm_style01?_r=1&_t=ZP-98bYer6y5D4'; // TODO: replace with the real TikTok link
 const FACEBOOK_URL = 'https://www.facebook.com/share/1GDmeuvy5a/?mibextid=wwXIfr'; // TODO: replace with the real Facebook link
