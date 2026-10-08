@@ -358,7 +358,7 @@ function renderCatalogManager(){
         document.getElementById('manService').innerHTML = buildManServiceOptions();
       }catch(e){
         console.error('Catalog.remove() failed:', e);
-        alert(t.catalogSaveError);
+        alert(t.catalogSaveError + '\n\n(' + (e.code || e.message) + ')');
       }
     });
   });
@@ -374,7 +374,7 @@ function buildManServiceOptions(){
       if(s.options.length===1 && !s.options[0].label){
         return [`<option value="${s.id}|0">${s.name[lang]} — $${s.options[0].price}</option>`];
       }
-      return s.options.map((opt,i)=>`<option value="${s.id}|${i}">${s.name[lang]} — ${opt.label[lang]} — $${opt.price}</option>`);
+      return s.options.map((opt,i)=>`<option value="${s.id}|${i}">${s.name[lang]}${opt.label ? ' — ' + opt.label[lang] : ''} — $${opt.price}</option>`);
     });
     return `<optgroup label="${cat}">${opts.join('')}</optgroup>`;
   }).join('');
@@ -529,7 +529,7 @@ async function initStaffPanel(){
       alert(t.catalogSaved);
     }catch(e){
       console.error('Catalog save failed:', e);
-      alert(t.catalogSaveError);
+      alert(t.catalogSaveError + '\n\n(' + (e.code || e.message) + ')');
     }finally{
       saveBtn.disabled = false;
     }
@@ -580,8 +580,15 @@ async function initStaffPanel(){
     }
 
     const dateStr = new Date(date+'T00:00').toLocaleDateString(lang==='fr' ? 'fr-CA' : 'en-US', {weekday:'long',month:'long',day:'numeric'});
-    await Bookings.add({ name, phone, email:'', date, dateStr, time, duration, worker: assignedWorker, services:[serviceLabel], source:'staff' });
-    manSubmitBtn.disabled = false;
+    try{
+      await Bookings.add({ name, phone, email:'', date, dateStr, time, duration, worker: assignedWorker, services:[serviceLabel], source:'staff' });
+    }catch(e){
+      console.error('Manual booking failed:', e);
+      alert(t.catalogSaveError + '\n\n(' + (e.code || e.message) + ')');
+      return;
+    }finally{
+      manSubmitBtn.disabled = false;
+    }
 
     document.getElementById('manName').value = '';
     document.getElementById('manPhone').value = '';
